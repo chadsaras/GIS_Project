@@ -26,7 +26,7 @@ All data are free. The first eight rows are required; MapBiomas and the growth-y
 | Dataset | Exact source / ID | Year used | Resolution | Role in the pipeline | How we get it |
 | --- | --- | --- | --- | --- | --- |
 | Google Satellite Embeddings (GSED) | Earth Engine `GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL`, bands A00–A63 | 2022 | 10 m | Main image input (64 numbers per cell) | Earth Engine export, averaged to 1 km |
-| VIIRS nighttime lights | Earth Engine `NOAA/VIIRS/DNB/ANNUAL_V22`, band `average_masked` (V21 for years up to 2021) | 2022 | \~460 m | Stage B proxy label; NTL-only benchmark | Earth Engine export, averaged to 1 km |
+| VIIRS nighttime lights | Earth Engine `NOAA/VIIRS/DNB/ANNUAL_V22`, band `average_masked` (covers 2012–2025) | 2022 | \~460 m | Stage B proxy label; NTL-only benchmark | Earth Engine export, averaged to 1 km |
 | ESA WorldCover | Earth Engine `ESA/WorldCover/v200` | 2021 (closest to 2022) | 10 m | Cell masking, land-cover shares, caption fact-check | Earth Engine export of class fractions per 1 km |
 | OpenStreetMap | Geofabrik extract `south-america/brazil/sudeste`, dated snapshot closest to 2023-01-01 (`.osm.pbf`) | End of 2022 | Vector | POI counts, road lengths, waterways (caption fact-check) | Download + parse with pyrosm / osmium |
 | High-resolution imagery for captions | Esri World Imagery tiles (\~0.5–1 m); fallback: Sentinel-2 `COPERNICUS/S2_SR_HARMONIZED` 2022 cloud-free true colour (10 m) | 2020–2023 | \~1 m (fallback 10 m) | Input to the vision-language model only | Tile download for sampled cells; licence check at Step 4.1 |
@@ -64,7 +64,7 @@ This phase ends with Earth Engine working, the cluster environment installed, an
 This phase produces one clean table with one row per MG municipality: code, name, GDP, population, log GDP per capita, sector shares and region code.
 
 1. **Download municipal boundaries.** Get `MG_Municipios_2022` from IBGE, keep columns `CD_MUN` (7-digit code), `NM_MUN`, `AREA_KM2`, and reproject to EPSG:31983. Check: 853 polygons, no invalid geometries (`make_valid`). *Output:* `interim/mg_municipios_2022.gpkg`.
-2. **Download 2022 GDP.** Use `sidrapy` to pull SIDRA table 5938 for all MG municipalities (territorial level 6, state 31), year 2022: GDP at current prices and gross value added by activity (agriculture, industry, services, public administration). Values are in thousands of BRL; convert to BRL. *Output:* `raw/ibge/pib_2022.csv`.
+2. **Download 2022 GDP.** Use `sidrapy` to pull SIDRA table 5938 for all MG municipalities (territorial level 6, state 31), year 2022: GDP at current prices and gross value added by activity (agriculture, industry, services, public administration). Values are in thousands of BRL; convert to BRL. IBGE publishes only total GDP for 2022 at municipal level, so the sector split is taken from 2021, the latest year that has it, and used only for flags and the error analysis. *Output:* `raw/ibge/pib_2022.csv`.
 3. **Download 2022 population.** Pull Census 2022 resident population per municipality. *Output:* `raw/ibge/pop_2022.csv`.
 4. **Download the immediate-region lookup.** Get the IBGE 2017 regional division table and keep municipality code → Região Geográfica Imediata code and name (70 regions in MG) and intermediate region (13). *Output:* `raw/ibge/regioes_2017.csv`.
 5. **Join and derive the targets.** Join steps 1–4 on the 7-digit code. Compute `gdp_pc = gdp / pop`, `log_gdp_pc`, `log_gdp`, `log_pop`, and the four sector shares of value added. Assert that all 853 codes match in every table (the script fails loudly otherwise). *Output:* `processed/municipal_labels.parquet`.
@@ -206,7 +206,7 @@ This phase explains where the best model works and fails (RQ5) and produces the 
 
 This phase tests whether predicted changes match official changes. The embedding paper expects NTL to win here.
 
-1. **Add years 2018–2021.** Export GSED and VIIRS for each year (V21 for years up to 2021, V22 for 2022). First check that V21 and V22 agree in 2021, if both cover it. Download IBGE GDP per year and IBGE population estimates for the non-Census years. *Output:* yearly cell tables.
+1. **Add years 2018–2021.** Export GSED and VIIRS for each year; VIIRS V22 covers 2012–2025, so one version serves every year. Download IBGE GDP per year and IBGE population estimates for the non-Census years. *Output:* yearly cell tables.
 2. **Reuse the trained models.** Apply each round's frozen Stage A and B to every year, and predict with Stage C. No retraining on other years. *Output:* a municipality × year prediction panel.
 3. **Fixed-effects regression.** Regress official log GDP per capita on predicted, with municipality and year fixed effects, separately for the embedding model and NTL (linear and quadratic). Compare MSE, as in the paper's Table 4. *Output:* `reports/tables/growth_results.csv`.
 4. **Mind 2020.** The COVID year is a shock that satellites may miss. Report results with and without 2020. *Output:* a robustness row.
