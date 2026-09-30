@@ -1,0 +1,31 @@
+# Data and model outputs live outside the repo (~/GIS/data); guard against accidents
+data/
+*.tif
+*.tiff
+*.parquet
+*.gpkg
+*.pbf
+*.npy
+*.npz
+*.pt
+*.jsonl
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+
+# Credentials
+*.json.key
+.env
+credentials*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

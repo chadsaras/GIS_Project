@@ -1,0 +1,113 @@
+# Central configuration. Every script reads this file (see src/gisecon/config.py).
+# Paths may use ~ and environment variables; GISECON_DATA_DIR overrides paths.data_dir.
+
+project:
+  name: gisecon
+  seed: 42
+
+paths:
+  data_dir: ~/GIS/data          # outside the git repo; never committed
+  raw: raw
+  interim: interim
+  processed: processed
+  models: models
+  logs: ~/GIS/logs
+  reports: reports              # relative to the repo root
+
+study:
+  country: BR
+  state_code: 31                # IBGE code for Minas Gerais
+  state_abbr: MG
+  year: 2022
+  sector_year: 2021             # IBGE municipal value added by sector stops at 2021
+  n_municipalities: 853
+
+grid:
+  crs: EPSG:31983               # SIRGAS 2000 / UTM zone 23S
+  cell_size_m: 1000
+
+gee:
+  project: null                 # Google Cloud project registered for Earth Engine (Step 0.2) - TBD
+  gsed: GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL
+  viirs: NOAA/VIIRS/DNB/ANNUAL_V22
+  viirs_band: average_masked
+  worldcover: ESA/WorldCover/v200
+  drive_folder: gisecon_exports
+
+sources:
+  ibge_boundaries_url: https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/UFs/MG/MG_Municipios_2022.zip
+  ibge_municipios_api: https://servicodados.ibge.gov.br/api/v1/localidades/estados/31/municipios   # includes regiao-imediata / intermediaria
+  sidra_gdp_table: 5938
+  sidra_gdp_vars:               # SIDRA variable ids in table 5938 (values in R$ 1,000)
+    gdp: 37
+    va_total: 498
+    va_agro: 513
+    va_industry: 517
+    va_services: 6575           # services excluding public administration
+    va_public: 525              # public administration, defence, education, health, social security
+    taxes: 543
+  sidra_pop_table: 4709         # Censo 2022
+  sidra_pop_var: 93
+  osm_url: https://download.geofabrik.de/south-america/brazil/sudeste-230101.osm.pbf
+
+masking:
+  water_max: 0.90
+  gsed_coverage_min: 0.50
+  empty_natural_min: 0.95       # tree or bare share, only dropped if no built/light/POI/road
+
+cv:
+  n_folds: 5
+  block: regiao_imediata
+  n_assignment_tries: 10000
+
+text:
+  n_sample: 10000
+  per_fold: 2000
+  tile_zoom: 17
+  tile_px: 768
+  vlm: Qwen/Qwen2.5-VL-7B-Instruct
+  vlm_fallback: Qwen/Qwen2.5-VL-3B-Instruct
+  sentence_model: sentence-transformers/all-mpnet-base-v2
+  clip_model: RemoteCLIP-ViT-B-32
+  clip_drop_share: 0.05
+  audit_n: 300
+
+stage_a:
+  proj_hidden: 256
+  emb_dim: 128
+  dropout: 0.1
+  temperature_init: 0.07
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  batch_size: 256
+  max_epochs: 200
+  patience: 20
+  text_variants: [full, raw, facts]
+
+stage_b:
+  hidden: [128, 64, 32]
+  lr: 1.0e-3
+  batch_size: 1024
+  max_epochs: 30
+  patience: 5
+
+stage_c:
+  cell_hidden: 32
+  cell_out: 16
+  muni_hidden: 16
+  lr: 1.0e-3
+  lr_min: 1.0e-4
+  max_epochs: 3000
+  rolling_window: 100
+  n_seeds: 5
+  grid:
+    hidden: [16, 32]
+    weight_decay: [1.0e-4, 1.0e-3]
+    dropout: [0.1, 0.3]
+    pooling: [sum, logsum]
+
+hybrid:
+  alphas: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+evaluation:
+  bootstrap_reps: 2000

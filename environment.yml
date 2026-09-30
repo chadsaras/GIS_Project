@@ -1,0 +1,35 @@
+name: gisecon
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - geopandas
+  - rasterio
+  - rioxarray
+  - xarray
+  - pyarrow
+  - shapely
+  - pyproj
+  - pyogrio
+  - pyrosm
+  - osmium-tool
+  - esda
+  - libpysal
+  - scikit-learn
+  - statsmodels
+  - lightgbm
+  - matplotlib
+  - contextily
+  - pyyaml
+  - tqdm
+  - pytest
+  - ipykernel
+  - pip
+  - pip:
+    - platformdirs>=4.12  # avoid a pip downgrade that breaks the pytest plugin
+    - earthengine-api
+    - geemap
+    - sidrapy
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - torch
+    - sentence-transformers
+    - open_clip_torch
