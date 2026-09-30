@@ -1,5 +1,5 @@
 # Data and model outputs live outside the repo (~/GIS/data); guard against accidents
-data/
+/data/
 *.tif
 *.tiff
 *.parquet
