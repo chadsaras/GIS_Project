@@ -4,6 +4,31 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-01 (5)  Earth Engine working on gpu77
+------------------------------------------------------------------------------
+Overall: about 35% (unchanged; this unblocks Phase 2.3-2.6).
+
+Done since last entry
+  + Today's code (models, runner, config with project ID) pushed to GitHub and pulled on gpu77
+  + earthengine authenticate done on gpu77; ee.Initialize(project='earth-engineresearch-2026')
+    and scripts/05_export_gee.py --check both work
+
+Gotcha (for anyone re-authenticating)
+  On the Google permission screen tick "Select all". With earthengine-api 1.7.46, leaving any
+  box unticked saves a login that Google later rejects (RefreshError invalid_scope), and ee only
+  says "Please authorize access ... run earthengine authenticate". Fix: earthengine authenticate
+  --auth_mode=notebook --force, tick all. Credentials live in ~/.config/earthengine/credentials
+  on the server: never copy them into the repo.
+
+In progress / next
+  - Full download: scripts/run_bg.sh gee python scripts/05_export_gee.py --workers 8
+    Estimated 1.5-4 h for all three layers (GSED is the slowest); log in ~/GIS/logs/*_gee.log.
+    Resumable: rerun the same command if it stops. Output: ~/GIS/data/raw/gee/*.tif
+  - OSM: download sudeste-230101.osm.pbf to ~/GIS/data/raw/osm, run scripts/03_osm_features.py
+  - Then Phase 2.10-2.12 (masking + cells.parquet + QC maps); script not written yet
+  - Nothing to push from the server: all outputs go to ~/GIS/data (outside git)
+
+------------------------------------------------------------------------------
 2026-10-01 (4)  Earth Engine project ID set
 ------------------------------------------------------------------------------
 Done since last entry
