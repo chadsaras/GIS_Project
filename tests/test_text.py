@@ -1,0 +1,42 @@
+import numpy as np
+import pandas as pd
+
+from gisecon.text.clean import clean_caption
+from gisecon.text.facts import fact_sentences
+from gisecon.text.sample import caption_sample
+
+
+def test_fact_sentences_town_and_empty_cell():
+    town = {"lc_built": 0.65, "lc_grass": 0.20, "lc_tree": 0.10, "poi_education": 12, "poi_health": 4,
+            "poi_retail": 8, "road_major_km": 8.2, "road_minor_km": 15.0, "water_km": 0.0, "ntl": 40.0}
+    assert fact_sentences(town) == ("Mostly built-up: 65% built-up, 20% grassland, 10% trees. "
+                                    "12 schools, 4 health facilities and 8 shops are mapped. "
+                                    "8.2 km of major roads and 15.0 km of minor roads. No mapped rivers.")
+    assert "light" not in fact_sentences(town).lower()  # NTL never leaks into text
+    rural = {"lc_grass": 0.7, "lc_tree": 0.3, "poi_fuel": 1, "water_km": 2.04}
+    assert fact_sentences(rural) == ("Mostly grassland: 70% grassland, 30% trees. 1 fuel station is mapped. "
+                                     "No mapped roads. 2.0 km of mapped rivers or streams.")
+
+
+def test_clean_caption_drops_filler_and_false_claims():
+    cell = {"lc_built": 0.3, "lc_tree": 0.02, "lc_grass": 0.4, "lc_water": 0.0, "water_km": 0.0, "poi_retail": 3}
+    text = ("The image shows a satellite view of a town. Dense houses line the streets. "
+            "A river runs through the centre. A dense forest covers the hills. No lakes are visible. "
+            "Pastures surround the town.")
+    cleaned, rows = clean_caption(text, cell)
+    assert [r["drop_reason"] for r in rows] == ["filler", None, "claim_water", "claim_forest", None, None]
+    assert cleaned == "Dense houses line the streets. No lakes are visible. Pastures surround the town."
+
+
+def test_caption_sample_quota_and_weights():
+    rng = np.random.default_rng(0)
+    n = 6000
+    kept = pd.DataFrame({"cell_id": np.arange(n), "muni_code": rng.integers(0, 50, n),
+                         "lc_built": rng.beta(0.5, 5, n), "ntl": np.where(rng.random(n) < 0.6, 0, rng.exponential(5, n))})
+    folds = pd.Series(np.arange(50) % 5, index=np.arange(50))
+    s = caption_sample(kept, folds, per_fold=300, seed=1)
+    assert s.groupby("fold").size().eq(300).all()
+    assert s.cell_id.is_unique
+    # weights add back up to the fold's cell count, so weighted statistics are unbiased
+    fold_sizes = kept.muni_code.map(folds).value_counts().sort_index()
+    np.testing.assert_allclose(s.groupby("fold").weight.sum().to_numpy(), fold_sizes.to_numpy(), rtol=0.15)

@@ -1,10 +1,10 @@
 """Phases 5-7: run Stage A -> B -> C for one variant and round, caching each stage's output.
 
 Usage:
-  python scripts/06_run_experiment.py --variant V7 --round 2
-  python scripts/06_run_experiment.py --variant all --round 2      # V3..V9, reusing the round's caches
+  python scripts/07_run_experiment.py --variant V7 --round 2
+  python scripts/07_run_experiment.py --variant all --round 2      # V3..V9, reusing the round's caches
   for r in 0 1 2 3 4; do
-    scripts/run_bg.sh exp_r$r python scripts/06_run_experiment.py --variant all --round $r --threads 8
+    scripts/run_bg.sh exp_r$r python scripts/07_run_experiment.py --variant all --round $r --threads 8
   done
 Run rounds in parallel, not variants of the same round: those share Stage A/B caches.
 

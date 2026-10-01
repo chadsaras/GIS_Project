@@ -4,6 +4,56 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-01 (6)  Cell table builder, baselines + evaluation, offline caption logic
+------------------------------------------------------------------------------
+Overall: about 45% (was about 35%). Nearly all code that does not need images is written;
+what remains is mostly running it on real data, the captioning, and the analysis/report.
+
+RENAMED: scripts/06_run_experiment.py -> scripts/07_run_experiment.py (06 is now the cell builder).
+
+Done since last entry
+  + scripts/06_build_cells.py + src/gisecon/data/cells.py   (PLAN 2.6, 2.10-2.12)
+      reads the 3 Earth Engine rasters (fails if any is off the grid lattice), joins OSM counts,
+      log_ntl, gsed_norm, masking rules from config (logs cells dropped per rule), keeps the
+      GSED cells of any municipality that would otherwise lose every cell, OSM completeness per
+      municipality, QC figure (log NTL, built-up share, GSED PCA as RGB).
+      -> processed/cells.parquet, interim/osm_completeness.parquet,
+         reports/tables/cells_mask_summary.csv, reports/figures/cells_qc.png
+  + scripts/08_baselines.py + src/gisecon/models/baselines.py   (PLAN 7.7-7.8, 8.1-8.3)
+      V1 NTL-only (linear/quadratic picked on val), V2 land-cover ridge, V11 ridge on mean
+      embeddings (raw GSED + every cached Stage A/B embedding), V12 LightGBM, V10 hybrid
+      (best V3-V9 by val MSE blended with V1, weight picked on val)
+  + scripts/09_evaluate.py + src/gisecon/eval/metrics.py   (PLAN 8.7-8.8)
+      main_results.csv: R2, RMSE, MAE, calibration slope/intercept, per-round RMSE mean/sd,
+      RMSE without flagged (mining/hydro) municipalities. rq_tests.csv: RMSE difference with
+      a 95% block-bootstrap interval over immediate regions for RQ1-RQ4.
+  + src/gisecon/text/{sample,facts,clean}.py   (PLAN 4.2, 4.6, 4.7-4.8; library only, no script yet)
+      caption sample (2,000 per fold over built-up tercile x NTL decile, with weights), fact
+      sentences (no night lights), filler removal + claim checks against land cover/OSM
+  + tests: test_cells.py, test_eval.py, test_text.py; test_run_experiment.py now runs
+      07 -> 08 -> 09 over all 5 rounds on fake data. 26 tests pass locally.
+  ~ src/gisecon/__init__.py only sets PROJ/GDAL paths when those folders exist (lets tests run
+    outside conda; no change on gpu77)
+
+Full run order on gpu77, once the downloads finish
+  python scripts/06_build_cells.py
+  for r in 0 1 2 3 4; do python scripts/07_run_experiment.py --variant V3 --round $r; \
+                         python scripts/07_run_experiment.py --variant V4 --round $r; done
+  for r in 0 1 2 3 4; do python scripts/08_baselines.py --round $r; done
+  python scripts/09_evaluate.py        # first real RQ1 answer (V4 vs V3) + V1/V2/V10-V12
+  (V5-V9 need processed/texts.parquet from Phase 4)
+
+Choices made (mention in report)
+  - V1 uses log(1 + total NTL) - log(pop) so a fully dark municipality stays finite
+  - Claim check skips sentences with a negation word ("no river is visible")
+  - OSM completeness = residual of log(1 + road km per cell) on mean built-up share
+
+Not done yet
+  - Phase 4 scripts: sampling script, tile download (waits on Esri licence check), Kaggle
+    captioning notebook, CLIP filter (4.9), audit (4.10), texts.parquet assembly (4.11)
+  - Stage A linear probe (5.6), Stage B neighbour check (6.5), Phase 9 error analysis and maps
+
+------------------------------------------------------------------------------
 2026-10-01 (5)  Earth Engine working on gpu77
 ------------------------------------------------------------------------------
 Overall: about 35% (unchanged; this unblocks Phase 2.3-2.6).
@@ -47,7 +97,7 @@ Pick up next: run the check above on gpu77, then the full download (see entry (3
 Overall: about 35% (was about 30%). The modelling code is ready; it is waiting on real data.
 
 Done since last entry
-  + scripts/06_run_experiment.py   runs variants V3-V9 (PLAN 8.4) for one round, or all of them:
+  + scripts/07_run_experiment.py   runs variants V3-V9 (PLAN 8.4) for one round, or all of them:
                                    standardizes GSED on training cells, encodes texts once
                                    (cached), trains Stage A / B per round (cached, so V5-V7 share
                                    one Stage A run), appends POI/road columns for V7-V9, runs the
@@ -60,7 +110,7 @@ Done since last entry
 
 How to run on gpu77 (once the inputs below exist)
   for r in 0 1 2 3 4; do
-    scripts/run_bg.sh exp_r$r python scripts/06_run_experiment.py --variant all --round $r --threads 8
+    scripts/run_bg.sh exp_r$r python scripts/07_run_experiment.py --variant all --round $r --threads 8
   done
   Run rounds in parallel, not variants of the same round (they share caches).
 
