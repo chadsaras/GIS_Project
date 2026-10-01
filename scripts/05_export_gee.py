@@ -44,7 +44,7 @@ def main() -> None:
 
     cells = pd.read_parquet(data_path(cfg, "interim", "cell_muni.parquet"), columns=["row", "col"])
     tiles = gee.tiles_needed(grid, cells.row.to_numpy(), cells.col.to_numpy(), args.tile)
-    print(f"{len(tiles)} tiles of {args.tile} x {args.tile} cells cover the state")
+    print(f"{len(tiles)} tiles of {args.tile} x {args.tile} cells cover the state", flush=True)
 
     for name in args.layers:
         make, bands, stem = layers[name]
@@ -58,7 +58,7 @@ def main() -> None:
             print(f"  test tile shape {a.shape}, band means {np.nanmean(a, axis=(0, 1))[:4]}")
             continue
         out = data_path(cfg, "raw", "gee", f"{stem}.tif")
-        print(f"downloading {name} -> {out}")
+        print(f"downloading {name} -> {out}", flush=True)
         gee.download_layer(img, bands, grid, tiles, args.tile, out,
                            data_path(cfg, "raw", "gee", "tiles", stem), args.workers)
 

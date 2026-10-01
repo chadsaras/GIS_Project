@@ -31,7 +31,8 @@ def gsed_image(collection: str, year: int, crs: str):
     img = col.mosaic().setDefaultProjection(native)
     cov = img.select(0).mask().rename("coverage")
     out = img.addBands(cov.toFloat()).setDefaultProjection(native)
-    return out.reduceResolution(ee.Reducer.mean(), maxPixels=16384)
+    # EE needs ~38k input pixels per 1 km cell here (native UTM tiles are skewed vs EPSG:31983); 65536 is its cap
+    return out.reduceResolution(ee.Reducer.mean(), maxPixels=65536)
 
 
 def viirs_image(collection: str, band: str, year: int):
@@ -46,7 +47,7 @@ def worldcover_image(collection: str):
     m = ee.ImageCollection(collection).first().select("Map")
     bands = [m.eq(c).rename(f"lc_{name}") for c, name in WORLDCOVER_CLASSES.items()]
     img = ee.Image.cat(bands).toFloat().setDefaultProjection(m.projection())
-    return img.reduceResolution(ee.Reducer.mean(), maxPixels=16384)
+    return img.reduceResolution(ee.Reducer.mean(), maxPixels=65536)
 
 
 def _grid_request(grid: Grid, row0: int, col0: int, h: int, w: int) -> dict:
@@ -66,7 +67,8 @@ def fetch_tile(image, grid: Grid, row0: int, col0: int, h: int, w: int, retries:
             arr = ee.data.computePixels({"expression": image, "fileFormat": "NUMPY_NDARRAY",
                                          "grid": _grid_request(grid, row0, col0, h, w)})
             return np.stack([arr[n].astype(np.float32) for n in arr.dtype.names], axis=-1)
-        except ee.EEException:  # quota / timeout: back off and retry
+        except ee.EEException as e:  # quota / timeout: back off and retry
+            print(f"  tile r{row0} c{col0} attempt {attempt + 1}/{retries} failed: {str(e)[:200]}", flush=True)
             if attempt == retries - 1:
                 raise
             time.sleep(2 ** attempt * 5)
@@ -93,11 +95,15 @@ def download_layer(image, band_names: list[str], grid: Grid, tiles: list[tuple[i
 
     t0, done = time.time(), 0
     with ThreadPoolExecutor(workers) as ex:
-        for fut in as_completed([ex.submit(job, rc) for rc in tiles]):
-            fut.result()
-            done += 1
-            if done % 50 == 0 or done == len(tiles):
-                print(f"  {out_tif.name}: {done}/{len(tiles)} tiles ({time.time() - t0:.0f} s)", flush=True)
+        try:
+            for fut in as_completed([ex.submit(job, rc) for rc in tiles]):
+                fut.result()
+                done += 1
+                if done % 50 == 0 or done == len(tiles):
+                    print(f"  {out_tif.name}: {done}/{len(tiles)} tiles ({time.time() - t0:.0f} s)", flush=True)
+        except BaseException:  # stop at the first failed tile instead of running every queued one
+            ex.shutdown(wait=False, cancel_futures=True)
+            raise
 
     nb = len(band_names)
     with rasterio.open(out_tif, "w", driver="GTiff", width=grid.width, height=grid.height, count=nb,

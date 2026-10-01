@@ -4,6 +4,21 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-01 (7)  Earth Engine download bug found and fixed
+------------------------------------------------------------------------------
+  - First full run (--tile 32 --workers 8) finished 0 GSED blocks in 14.5 min; job killed.
+  - Cause (from a timing test): every request failed with "Too many input pixels per output
+    pixel. Need 38155, but only 16384 allowed." gsed_image/worldcover_image used
+    reduceResolution(maxPixels=16384); GSED's native UTM tiles are skewed against EPSG:31983,
+    so EE needs ~38k 10 m pixels per 1 km cell. Block size was not the problem.
+  - Second bug: after the first failed tile, the thread pool still ran every queued tile
+    (each retrying ~75 s) before exiting, so the job looked alive but did nothing.
+  ~ gee.py: maxPixels=65536 (EE's cap, as PLAN 2.3 says) for GSED and WorldCover; the download
+    stops at the first failed tile; every failed attempt is logged. 05_export_gee.py flushes
+    its progress lines.
+  - Next: pull on gpu77, rerun the timing test, then restart the full download.
+
+------------------------------------------------------------------------------
 2026-10-01 (6)  Cell table builder, baselines + evaluation, offline caption logic
 ------------------------------------------------------------------------------
 Overall: about 45% (was about 35%). Nearly all code that does not need images is written;
