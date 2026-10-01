@@ -27,7 +27,7 @@ grid:
   cell_size_m: 1000
 
 gee:
-  project: null                 # Google Cloud project registered for Earth Engine (Step 0.2) - TBD
+  project: earth-engineresearch-2026   # Google Cloud project registered for Earth Engine (Step 0.2)
   gsed: GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL
   viirs: NOAA/VIIRS/DNB/ANNUAL_V22
   viirs_band: average_masked

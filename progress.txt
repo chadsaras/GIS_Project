@@ -1,0 +1,113 @@
+PROGRESS LOG — Text- and Night-Light-Guided Satellite Embeddings (Minas Gerais)
+==============================================================================
+Newest entry on top. Each entry says what changed since the previous entry, the
+overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
+
+------------------------------------------------------------------------------
+2026-10-01 (4)  Earth Engine project ID set
+------------------------------------------------------------------------------
+Done since last entry
+  + configs/config.yaml gee.project = earth-engineresearch-2026 (Google Cloud project created)
+
+Still to confirm (not verified yet)
+  - Earth Engine API enabled on the project and project registered for noncommercial use
+  - earthengine authenticate run on gpu77
+  - python scripts/05_export_gee.py --check prints band names and a test tile
+
+Pick up next: run the check above on gpu77, then the full download (see entry (3) for the rest).
+
+------------------------------------------------------------------------------
+2026-10-01 (3)  Experiment runner for Stages A -> B -> C
+------------------------------------------------------------------------------
+Overall: about 35% (was about 30%). The modelling code is ready; it is waiting on real data.
+
+Done since last entry
+  + scripts/06_run_experiment.py   runs variants V3-V9 (PLAN 8.4) for one round, or all of them:
+                                   standardizes GSED on training cells, encodes texts once
+                                   (cached), trains Stage A / B per round (cached, so V5-V7 share
+                                   one Stage A run), appends POI/road columns for V7-V9, runs the
+                                   16-setting Stage C grid on validation, then a 5-seed ensemble.
+                                   Writes processed/predictions/{variant}_r{round}.parquet (val +
+                                   test rows), reports/tables/stage_c_tuning/{variant}_r{round}.csv,
+                                   and models + diagnostics json under models/round{r}/.
+  + tests/test_run_experiment.py   end-to-end run of V7 on a tiny fake data directory (also checks
+                                   that a second run reuses the caches). All tests pass locally.
+
+How to run on gpu77 (once the inputs below exist)
+  for r in 0 1 2 3 4; do
+    scripts/run_bg.sh exp_r$r python scripts/06_run_experiment.py --variant all --round $r --threads 8
+  done
+  Run rounds in parallel, not variants of the same round (they share caches).
+
+Inputs it expects (not built yet)
+  processed/cells.parquet   <- Phase 2.11: cell_id, muni_code, keep, gsed_00..63, log_ntl, poi_*, road_*_km
+  processed/texts.parquet   <- Phase 4.11: cell_id, text_full, text_raw, text_facts (V5-V9 only)
+  V3 and V4 need only cells.parquet, so they can run as soon as Earth Engine + OSM data are in.
+
+Small choices made (mention in report)
+  - POI counts and road km both enter Stage C as log(1 + x), then standardized.
+  - Stage A diagnostics: recall@1/5/10 only; the linear probe to built-up share (PLAN 5.6) and the
+    Stage B neighbour check (PLAN 6.5) are not written yet.
+
+Not done yet
+  - V1, V2, V10-V12 baselines (NTL-only, land cover, hybrid, ridge, LightGBM) and the metrics /
+    block-bootstrap script (Phase 8)
+  - Stage C runtime on real data is unknown (16 settings x up to 3,000 full-batch epochs + 5 seeds
+    per variant and round); check it on V3 round 0 first
+
+Pick up next: same as entry (2) - Earth Engine, OSM run, then Phase 2.10-2.12 (cells.parquet).
+
+------------------------------------------------------------------------------
+2026-10-01 (2)  Stage A/B/C model code
+------------------------------------------------------------------------------
+Overall: about 30% (was about 20-25%). Still ahead of plan (Week 1 starts Mon 5 Oct).
+
+Done since last entry
+  + src/gisecon/models/train.py    shared mini-batch loop with early stopping (used by A and B)
+  + src/gisecon/models/stage_a.py  image-text alignment (PLAN 5.3-5.7): 64->256->128 image side,
+                                   768->256->128 text side, learnable temperature, symmetric
+                                   InfoNCE, recall@k diagnostic, embed every cell
+  + src/gisecon/models/stage_b.py  night-light mapper (PLAN 6.2-6.6): d->128->64->32->1,
+                                   z = 32-number layer, outputs z + predicted log NTL per cell
+  + src/gisecon/models/stage_c.py  municipal GDP by sum-pooling (PLAN 7.2-7.4): per-cell net with
+                                   softplus, index_add_ pooling, "sum" or "logsum" pooling,
+                                   full-batch training, LR-on-plateau, 100-epoch rolling-mean
+                                   early stopping
+  + tests/test_models.py           synthetic-data checks for all three stages (6 tests incl.
+                                   test_config pass locally, ~6 s)
+
+Finding
+  On the synthetic test, "sum" pooling fit badly (R2 -0.53) while "logsum" fit well (R2 0.66).
+  Real municipalities differ by up to 10,000x in cell count, so expect logsum to win
+  on validation. Keep both in the tuning grid as planned; watch for this in Phase 7.
+
+Not done yet in these phases (need real data or come later)
+  - Scripts that run the stages per round on real data (5.1-5.2 text encoding / scaler,
+    6.1 target prep, 7.1 inputs, 7.5 tuning grid, 7.6 5-seed ensemble)
+  - Ridge (7.7) and LightGBM (7.8) baselines, predictions.parquet (7.9)
+  - Stage A recall + linear-probe diagnostics table, Stage B neighbour check (6.5)
+
+Still blocked
+  - Earth Engine project ID (configs/config.yaml gee.project is null) -> no GSED/VIIRS/WorldCover
+  - Instructor approval, Kaggle account, Esri licence check (PLAN 0.1, 0.8, 4.1)
+
+Pick up next
+  1. Earth Engine setup, then: python scripts/05_export_gee.py --check, then the full download
+  2. Run scripts/03_osm_features.py on gpu77 (download the Geofabrik .pbf first)
+  3. Write Phase 2.10-2.12: masking + processed/cells.parquet + QC maps
+
+------------------------------------------------------------------------------
+2026-10-01 (1)  Starting point (commit 84f0d11)
+------------------------------------------------------------------------------
+Overall: about 20-25%.
+
+Done
+  Phase 0  repo skeleton, config, environment.yml, data sources verified (docs/data_sources.md)
+  Phase 1  municipal labels for all 853 municipalities (GDP 2022, Census pop 2022, 2021 sector
+           shares, extreme-activity flags); reports/figures/labels_overview.png
+  Phase 2  2.1-2.2 grid 1186 x 963 in EPSG:31983, 586,873 cells assigned to municipalities
+           2.3-2.6 Earth Engine download code written, NOT run (no project ID)
+           2.7-2.9 OSM POI/road code written, not confirmed run
+  Phase 3  5 spatial folds over 70 immediate regions, get_split(), tests, folds map
+
+Not started: Phase 2.10-2.12, Phases 4-11.

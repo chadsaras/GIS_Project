@@ -4,6 +4,7 @@ Estimating 2022 municipal GDP per capita in Minas Gerais, Brazil, from Google sa
 
 - Proposal: `Term Project Proposal ….pdf`
 - Execution plan: [PLAN.md](PLAN.md)
+- What is done and where to pick up: [progress.txt](progress.txt)
 
 ## Layout
 
