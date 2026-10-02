@@ -74,7 +74,7 @@ def qc_figure(kept: pd.DataFrame, grid: Grid, out) -> None:
         return a
 
     g = kept[GSED].to_numpy(np.float64)
-    g -= g.mean(0)
+    g = g - g.mean(0)  # to_numpy can return a read-only view (pandas copy-on-write)
     pcs = g @ np.linalg.svd(g[:: max(1, len(g) // 50_000)], full_matrices=False)[2][:3].T
     lo, hi = np.percentile(pcs, [2, 98], axis=0)
     rgb = to_raster(np.clip((pcs - lo) / (hi - lo), 0, 1))
