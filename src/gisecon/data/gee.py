@@ -60,8 +60,11 @@ def _grid_request(grid: Grid, row0: int, col0: int, h: int, w: int) -> dict:
     }
 
 
+TOO_BIG = ("memory limit", "too large", "too many input pixels")  # errors a smaller request fixes
+
+
 def fetch_tile(image, grid: Grid, row0: int, col0: int, h: int, w: int, retries: int = 5) -> np.ndarray:
-    """(h, w, bands) float32 array for one tile."""
+    """(h, w, bands) float32 array for one tile. Transient errors are retried; "too big" errors are raised at once."""
     import ee
     for attempt in range(retries):
         try:
@@ -69,10 +72,27 @@ def fetch_tile(image, grid: Grid, row0: int, col0: int, h: int, w: int, retries:
                                          "grid": _grid_request(grid, row0, col0, h, w)})
             return np.stack([arr[n].astype(np.float32) for n in arr.dtype.names], axis=-1)
         except ee.EEException as e:  # quota / timeout: back off and retry
-            print(f"  tile r{row0} c{col0} attempt {attempt + 1}/{retries} failed: {str(e)[:200]}", flush=True)
-            if attempt == retries - 1:
+            print(f"  tile r{row0} c{col0} ({h}x{w}) attempt {attempt + 1}/{retries} failed: {str(e)[:200]}", flush=True)
+            if attempt == retries - 1 or any(s in str(e).lower() for s in TOO_BIG):
                 raise
             time.sleep(2 ** attempt * 5)
+
+
+def fetch_split(image, grid: Grid, row0: int, col0: int, h: int, w: int, min_size: int = 4) -> np.ndarray:
+    """fetch_tile, but a tile that is too big for Earth Engine is split into quarters (recursively)."""
+    import ee
+    try:
+        return fetch_tile(image, grid, row0, col0, h, w)
+    except ee.EEException as e:
+        if not any(s in str(e).lower() for s in TOO_BIG) or max(h, w) <= min_size:
+            raise
+    hh, hw = (h + 1) // 2, (w + 1) // 2
+    print(f"  splitting tile r{row0} c{col0} ({h}x{w}) into quarters", flush=True)
+    top = [fetch_split(image, grid, row0, col0 + dc, hh, cw, min_size) for dc, cw in ((0, hw), (hw, w - hw)) if cw]
+    bot = [fetch_split(image, grid, row0 + hh, col0 + dc, h - hh, cw, min_size)
+           for dc, cw in ((0, hw), (hw, w - hw)) if cw] if h - hh else []
+    rows = [np.concatenate(top, axis=1)] + ([np.concatenate(bot, axis=1)] if bot else [])
+    return np.concatenate(rows, axis=0)
 
 
 def tiles_needed(grid: Grid, cell_rows: np.ndarray, cell_cols: np.ndarray, tile: int) -> list[tuple[int, int]]:
@@ -91,7 +111,7 @@ def download_layer(image, band_names: list[str], grid: Grid, tiles: list[tuple[i
         f = tile_dir / f"r{r0:05d}_c{c0:05d}.npy"
         if not f.exists():
             h, w = min(tile, grid.height - r0), min(tile, grid.width - c0)
-            np.save(f, fetch_tile(image, grid, r0, c0, h, w))
+            np.save(f, fetch_split(image, grid, r0, c0, h, w))
         return f
 
     t0, done = time.time(), 0
