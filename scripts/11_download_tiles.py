@@ -114,7 +114,8 @@ def main() -> None:
         for i, fut in enumerate(as_completed(futs), 1):
             if fut.exception():
                 if not failed:
-                    print(f"first failure (cell {futs[fut]}): {re.sub(r"token=[^&\s'\"]+", "token=***", str(fut.exception()))[:200]}")
+                    msg = re.sub(r"token=[^&\s'\"]+", "token=***", str(fut.exception()))  # never log the key
+                    print(f"first failure (cell {futs[fut]}): {msg[:200]}")
                 failed.append(futs[fut])
             if i % 200 == 0 or i == len(ids):
                 print(f"{i}/{len(ids)} cells ({time.time() - t0:.0f} s), {len(failed)} failed", flush=True)
