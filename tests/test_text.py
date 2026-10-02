@@ -42,6 +42,20 @@ def test_caption_sample_quota_and_weights():
     np.testing.assert_allclose(s.groupby("fold").weight.sum().to_numpy(), fold_sizes.to_numpy(), rtol=0.15)
 
 
+def test_caption_sample_oversamples_towns():
+    """Realistic shares: ~80% dark, most cells with no built-up land. Towns must be over-represented."""
+    rng = np.random.default_rng(2)
+    n = 20000
+    town = rng.random(n) < 0.03
+    kept = pd.DataFrame({"cell_id": np.arange(n), "muni_code": rng.integers(0, 50, n),
+                         "lc_built": np.where(town, rng.uniform(0.05, 0.9, n), np.where(rng.random(n) < 0.3, 0.002, 0)),
+                         "ntl": np.where(town, rng.exponential(10, n), np.where(rng.random(n) < 0.15, 0.3, 0))})
+    folds = pd.Series(np.arange(50) % 5, index=np.arange(50))
+    s = caption_sample(kept, folds, per_fold=400, seed=1).merge(kept, on="cell_id")
+    assert s.lc_built.mean() > 3 * kept.lc_built.mean()
+    assert (s.ntl > 0).mean() > 2 * (kept.ntl > 0).mean()
+
+
 def test_log_odds_marks_group_words():
     from gisecon.text.words import log_odds_z
     a, b = np.array([50, 5, 20]), np.array([5, 50, 20])  # word 0 typical of a, word 1 of b, word 2 shared
