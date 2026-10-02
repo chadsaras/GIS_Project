@@ -41,14 +41,17 @@ def main() -> None:
     res = pd.read_csv(tab_dir / "main_results.csv").set_index("variant")
     complete = res[res.n_rounds == n_rounds]
     best = args.model or complete.drop(index="V1", errors="ignore")["val_rmse"].idxmin()
-    print(f"best model by validation RMSE: {best}")
+    # uncertainty (9.6) and the activity map (9.8) need a 5-seed ensemble, which only V3-V9 have
+    ens = [v for v in complete.index if v in STAGE_B_INPUT or v in ("V3", "V5")]
+    best_ens = best if best in ens else complete.loc[ens, "val_rmse"].idxmin()
+    print(f"best model by validation RMSE: {best}; best ensemble model: {best_ens}")
     preds = pd.concat([pd.read_parquet(f) for f in data_path(cfg, "processed", "predictions").glob("*.parquet")])
     test = preds[preds.split == "test"]
     lab = pd.read_parquet(data_path(cfg, "processed", "municipal_labels.parquet")).set_index("muni_code")
     folds = pd.read_parquet(data_path(cfg, "processed", "folds.parquet")).set_index("muni_code")
     osm = pd.read_parquet(data_path(cfg, "interim", "osm_completeness.parquet")).set_index("muni_code")
     m = lab.join(osm[["built_share", "osm_completeness"]]).join(folds["block_id"])
-    for v in (best, "V1"):
+    for v in dict.fromkeys((best, best_ens, "V1")):
         p = test[test.variant == v].set_index("muni_code")
         m[f"pred_{v}"], m[f"lo_{v}"], m[f"hi_{v}"] = p.y_pred, p.ens_min, p.ens_max
         m[f"abs_err_{v}"] = (p.y_pred - m.log_gdp_pc).abs()
@@ -121,14 +124,14 @@ def main() -> None:
     (tab_dir / "top10_gaps.md").write_text("\n".join(lines))
 
     # 9.6 does ensemble spread track error?
-    spread = m[f"hi_{best}"] - m[f"lo_{best}"]
-    rho, p = spearmanr(spread, m[f"abs_err_{best}"], nan_policy="omit")
+    spread = m[f"hi_{best_ens}"] - m[f"lo_{best_ens}"]
+    rho, p = spearmanr(spread, m[f"abs_err_{best_ens}"], nan_policy="omit")
     fig, ax = plt.subplots(figsize=(6, 4.5))
     bins = pd.qcut(spread, 10, duplicates="drop")
-    m.groupby(bins, observed=True)[f"abs_err_{best}"].mean().plot(marker="o", ax=ax)
+    m.groupby(bins, observed=True)[f"abs_err_{best_ens}"].mean().plot(marker="o", ax=ax)
     ax.set_xlabel("5-seed min-max range (decile)")
     ax.set_ylabel("mean absolute error")
-    ax.set_title(f"{best}: Spearman rho {rho:.2f} (p={p:.3g})")
+    ax.set_title(f"{best_ens}: Spearman rho {rho:.2f} (p={p:.3g})")
     ax.tick_params(axis="x", labelrotation=45)
     fig.tight_layout()
     fig.savefig(fig_dir / "uncertainty_vs_error.png", dpi=150)
@@ -148,7 +151,7 @@ def main() -> None:
         plt.close(fig)
 
     # 9.8 out-of-sample 1 km activity map: each cell from the round where its municipality is tested
-    inp = STAGE_B_INPUT.get(best) or next((v for k, v in STAGE_B_INPUT.items() if k in complete.index), None)
+    inp = STAGE_B_INPUT.get(best_ens) or next((v for k, v in STAGE_B_INPUT.items() if k in complete.index), None)
     if inp is None:
         print("activity map skipped: no Stage B run found")
         return

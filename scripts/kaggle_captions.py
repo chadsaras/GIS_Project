@@ -5,12 +5,15 @@
 #   2. New notebook -> Add data -> that dataset; Settings: Accelerator "GPU T4 x2", Internet on.
 #   3. Paste this file into one cell (or split at the "# %%" marks) and run.
 #      Pilot first (PLAN 4.4): LIMIT = 200, run once per prompt id, read ~30 outputs of each.
-#   4. Download /kaggle/working/captions_raw.jsonl to ~/GIS/data/interim/ on the server.
+#   4. Download /kaggle/working/captions_raw_<PROMPT_ID>.jsonl to ~/GIS/data/interim/ on the server.
+#   Check the first printed captions: fp16 on T4 can produce empty or repeated-character output; if so,
+#   switch to torch_dtype=torch.float32 for the vision tower or use the 3B model.
 # Resumable: cells already in the JSONL are skipped, so rerun after a session timeout.
 
 # %%
 import glob
 import json
+import random
 import time
 from pathlib import Path
 
@@ -31,7 +34,9 @@ PROMPT_ID = "base_v1"
 LIMIT = None          # 200 for the pilot
 BATCH = 8             # lower to 4 if CUDA runs out of memory
 MAX_NEW, TEMPERATURE, SEED = 200, 0.2, 42
-TILES = sorted(glob.glob("/kaggle/input/**/*.png", recursive=True))[:LIMIT]
+TILES = sorted(glob.glob("/kaggle/input/**/*.png", recursive=True))
+if LIMIT:  # pilot: a seeded random sample, not the first files (sorted by cell_id = northernmost cells)
+    TILES = sorted(random.Random(SEED).sample(TILES, min(LIMIT, len(TILES))))
 OUT = Path(f"/kaggle/working/captions_raw_{PROMPT_ID}.jsonl")
 
 # %%
@@ -61,6 +66,9 @@ with OUT.open("a") as f:
             f.write(json.dumps({"cell_id": int(Path(p).stem), "caption": txt.strip(), "model": MODEL,
                                 "prompt_id": PROMPT_ID, "seed": SEED}) + "\n")
         f.flush()
+        if i == 0:  # eyeball the first batch for broken fp16 output
+            for p, txt in list(zip(paths, texts))[:3]:
+                print(f"--- {Path(p).stem}: {txt.strip()[:300]}")
         n = i + len(paths)
         if n % 200 < BATCH or n == len(todo):
             rate = (time.time() - t0) / n

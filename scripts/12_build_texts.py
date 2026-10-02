@@ -4,10 +4,11 @@
       LIGHT (a minute) without --clip; MEDIUM with --clip (RemoteCLIP over ~10k tiles, ~15-30 min CPU)
       -> processed/texts.parquet (cell_id, text_raw, text_full, text_facts, clip_score, keep_caption)
          interim/caption_sentences.parquet (every sentence with its drop_reason)
-  python scripts/12_build_texts.py --audit-export      300 random captions, blind A/B order (PLAN 4.10)
-      -> interim/audit/audit.html (tile + both texts), audit_labels.csv (fill `label`: correct/false/vague;
-         optional `label2` by a second person), audit_key.csv (which of A/B is raw; do not open while labelling)
+  python scripts/12_build_texts.py --audit-export      300 random raw captions, every sentence once (PLAN 4.10)
+      -> interim/audit/audit.html (tile + numbered sentences), audit_labels.csv (fill `label`: correct/false/vague;
+         optional `label2` by a second person). Drop decisions are not shown, so labelling is blind to cleaning.
   python scripts/12_build_texts.py --audit-score       -> reports/tables/caption_audit.csv
+      raw vs cleaned false-claim share (Wilson 95% CI), cleaning precision and recall, kappa
 """
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ import pandas as pd
 
 from gisecon.config import REPO_ROOT, data_path, load_config
 from gisecon.eval.metrics import cohen_kappa, wilson
-from gisecon.text.clean import clean_caption, split_sentences
+from gisecon.text.clean import clean_caption
 from gisecon.text.facts import fact_sentences
 
 
@@ -83,46 +84,65 @@ def build(cfg, captions_path, use_clip: bool) -> None:
 
 
 def audit_export(cfg) -> None:
+    """Every sentence of 300 random raw captions, labelled once. The labeller never sees which sentences the
+    cleaning dropped, so raw and cleaned results are both derived from the same blind labels."""
     texts = pd.read_parquet(data_path(cfg, "processed", "texts.parquet"))
-    texts = texts[texts["text_raw"].str.len() > 0].sample(cfg["text"]["audit_n"], random_state=cfg["project"]["seed"])
-    rng = np.random.default_rng(cfg["project"]["seed"])
-    sents = pd.read_parquet(data_path(cfg, "interim", "caption_sentences.parquet"))
-    kept = sents[sents["drop_reason"].isna()].groupby("cell_id")["sentence"].apply(" ".join)
+    cids = texts.loc[texts["text_raw"].str.len() > 0, "cell_id"].sample(
+        cfg["text"]["audit_n"], random_state=cfg["project"]["seed"]).tolist()
+    sents = _sentences(cfg)
+    sents = sents[sents["cell_id"].isin(cids)]
     adir = data_path(cfg, "interim", "audit")
     adir.mkdir(exist_ok=True)
     tiles = data_path(cfg, "raw", "tiles")
-    key, labels, page = [], [], ["<html><meta charset='utf-8'><body style='font-family:sans-serif;max-width:1100px'>"]
-    for cid in texts["cell_id"]:
-        versions = {"raw": texts.set_index("cell_id").at[cid, "text_raw"], "clean": kept.get(cid, "")}
-        order = rng.permutation(["raw", "clean"])
-        key.append({"cell_id": cid, "A": order[0], "B": order[1]})
-        page.append(f"<h3>cell {cid}</h3><img src='file://{tiles / f'{cid}.png'}' width=384>")
-        for letter, ver in zip("AB", order):
-            ss = split_sentences(versions[ver])
-            page.append(f"<p><b>{letter}</b><br>" + "<br>".join(f"{i}. {html.escape(s)}" for i, s in enumerate(ss)))
-            labels += [{"cell_id": cid, "version": letter, "sent_idx": i, "sentence": s, "label": "", "label2": ""}
-                       for i, s in enumerate(ss)]
+    page = ["<html><meta charset='utf-8'><body style='font-family:sans-serif;max-width:1100px'>",
+            "<p>Label each sentence in audit_labels.csv: <b>correct</b>, <b>false</b> (claims something not "
+            "in the image) or <b>vague</b> (true but says nothing specific).</p>"]
+    for cid in cids:
+        s = sents[sents["cell_id"] == cid]
+        page.append(f"<h3>cell {cid}</h3><img src='file://{tiles / f'{cid}.png'}' width=384><p>"
+                    + "<br>".join(f"{i}. {html.escape(t)}" for i, t in zip(s["sent_idx"], s["sentence"])))
     (adir / "audit.html").write_text("\n".join(page))
-    pd.DataFrame(labels).to_csv(adir / "audit_labels.csv", index=False)
-    pd.DataFrame(key).to_csv(adir / "audit_key.csv", index=False)
-    print(f"wrote {adir}/audit.html and audit_labels.csv ({len(labels)} sentences to label)")
+    out = sents[["cell_id", "sent_idx", "sentence"]].assign(label="", label2="")
+    out.to_csv(adir / "audit_labels.csv", index=False)
+    print(f"wrote {adir}/audit.html and audit_labels.csv ({len(out)} sentences from {len(cids)} captions)")
+
+
+def _sentences(cfg) -> pd.DataFrame:
+    """caption_sentences.parquet with the sentence position inside its caption."""
+    s = pd.read_parquet(data_path(cfg, "interim", "caption_sentences.parquet"))
+    return s.assign(sent_idx=s.groupby("cell_id").cumcount())
 
 
 def audit_score(cfg) -> None:
+    """PLAN 4.10: share of captions with at least one false claim, raw vs cleaned, plus how well cleaning did."""
     adir = data_path(cfg, "interim", "audit")
     lab = pd.read_csv(adir / "audit_labels.csv", dtype={"label": str, "label2": str})
-    key = pd.read_csv(adir / "audit_key.csv").melt("cell_id", var_name="version", value_name="text")
-    lab = lab.merge(key, on=["cell_id", "version"])
     assert lab["label"].notna().all(), "some sentences have no label yet"
-    per_caption = lab.groupby(["text", "cell_id"])["label"].apply(lambda s: (s == "false").any()).reset_index()
+    assert set(lab["label"]) <= {"correct", "false", "vague"}, f"unexpected labels: {set(lab['label'])}"
+    lab = lab.merge(_sentences(cfg)[["cell_id", "sent_idx", "drop_reason"]], on=["cell_id", "sent_idx"])
+    texts = pd.read_parquet(data_path(cfg, "processed", "texts.parquet")).set_index("cell_id")
+    lab["caption_kept"] = lab["cell_id"].map(texts["keep_caption"]).astype(bool)  # False: dropped by CLIP / empty
+    lab["kept"] = lab["drop_reason"].isna() & lab["caption_kept"]
+    is_false = lab["label"] == "false"
+
     rows = []
-    for ver, g in per_caption.groupby("text"):
-        p, lo, hi = wilson(int(g["label"].sum()), len(g))
-        rows.append({"version": ver, "captions": len(g), "share_with_false_claim": p, "ci_low": lo, "ci_high": hi})
-    two = lab.dropna(subset=["label2"])
+    raw = is_false.groupby(lab["cell_id"]).any()
+    clean = (is_false & lab["kept"]).groupby(lab["cell_id"]).any()[lab.groupby("cell_id")["kept"].any()]
+    for name, per_cap in (("raw captions", raw), ("cleaned captions (those still used)", clean)):
+        p, lo, hi = wilson(int(per_cap.sum()), len(per_cap))
+        rows.append({"measure": f"share with >= 1 false claim: {name}", "n": len(per_cap),
+                     "value": p, "ci_low": lo, "ci_high": hi})
+    dropped = lab[lab["drop_reason"].notna()]  # removed by the filler / claim rules (passes 1-2)
+    for name, k, n in (("rule-dropped sentences that were false or vague (cleaning precision)",
+                        int(dropped["label"].isin(["false", "vague"]).sum()), len(dropped)),
+                       ("false sentences removed by any cleaning pass (cleaning recall)",
+                        int((is_false & ~lab["kept"]).sum()), int(is_false.sum()))):
+        p, lo, hi = wilson(k, n)
+        rows.append({"measure": name, "n": n, "value": p, "ci_low": lo, "ci_high": hi})
+    two = lab[lab["label2"].notna() & (lab["label2"] != "")]
     if len(two):
-        rows.append({"version": f"kappa over {len(two)} double-labelled sentences",
-                     "share_with_false_claim": cohen_kappa(two["label"], two["label2"])})
+        rows.append({"measure": "Cohen's kappa, double-labelled sentences", "n": len(two),
+                     "value": cohen_kappa(two["label"], two["label2"])})
     out = pd.DataFrame(rows)
     out.round(4).to_csv(REPO_ROOT / cfg["paths"]["reports"] / "tables" / "caption_audit.csv", index=False)
     print(out.round(3).to_string(index=False))
