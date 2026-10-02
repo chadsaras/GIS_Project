@@ -63,19 +63,34 @@ def _grid_request(grid: Grid, row0: int, col0: int, h: int, w: int) -> dict:
 TOO_BIG = ("memory limit", "too large", "too many input pixels")  # errors a smaller request fixes
 
 
-def fetch_tile(image, grid: Grid, row0: int, col0: int, h: int, w: int, retries: int = 5) -> np.ndarray:
-    """(h, w, bands) float32 array for one tile. Transient errors are retried; "too big" errors are raised at once."""
+BUSY = ("too many requests", "concurrency limit")  # Earth Engine is rate-limiting us: wait, don't give up
+
+
+def fetch_tile(image, grid: Grid, row0: int, col0: int, h: int, w: int, retries: int = 5,
+               busy_retries: int = 40) -> np.ndarray:
+    """(h, w, bands) float32 array for one tile. Transient errors are retried; "too big" errors are raised at once.
+
+    Concurrency / rate-limit errors (frequent in restricted mode) get up to `busy_retries` waits of <= 60 s
+    and do not count against `retries`.
+    """
     import ee
-    for attempt in range(retries):
+    attempt = busy = 0
+    while True:
         try:
             arr = ee.data.computePixels({"expression": image, "fileFormat": "NUMPY_NDARRAY",
                                          "grid": _grid_request(grid, row0, col0, h, w)})
             return np.stack([arr[n].astype(np.float32) for n in arr.dtype.names], axis=-1)
-        except ee.EEException as e:  # quota / timeout: back off and retry
-            print(f"  tile r{row0} c{col0} ({h}x{w}) attempt {attempt + 1}/{retries} failed: {str(e)[:200]}", flush=True)
-            if attempt == retries - 1 or any(s in str(e).lower() for s in TOO_BIG):
+        except ee.EEException as e:
+            msg = str(e).lower()
+            if any(s in msg for s in BUSY) and busy < busy_retries:
+                busy += 1
+                time.sleep(min(60, 5 * busy))
+                continue
+            attempt += 1
+            print(f"  tile r{row0} c{col0} ({h}x{w}) attempt {attempt}/{retries} failed: {str(e)[:200]}", flush=True)
+            if attempt >= retries or any(s in msg for s in TOO_BIG):
                 raise
-            time.sleep(2 ** attempt * 5)
+            time.sleep(2 ** (attempt - 1) * 5)
 
 
 def fetch_split(image, grid: Grid, row0: int, col0: int, h: int, w: int, min_size: int = 4) -> np.ndarray:
