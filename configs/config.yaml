@@ -63,8 +63,14 @@ cv:
 text:
   n_sample: 10000
   per_fold: 2000
-  tile_zoom: 17
-  tile_url: https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}   # Esri World Imagery; licence check pending (Step 4.1)
+  # Esri World Imagery through the ArcGIS Static Basemap Tiles service (PLAN 4.1 decision, 2026-10-02):
+  # imagery style without labels, 512 px tiles, ArcGIS Location Platform API key (free tier 2M tiles/month).
+  # The key is read from text.tile_key_file (or $ESRI_API_KEY) and never committed. Attribution required.
+  tile_url: https://static-map-tiles-api.arcgis.com/arcgis/rest/services/static-basemap-tiles-service/v1/arcgis/imagery/static/tile/{z}/{y}/{x}
+  tile_size: 512
+  tile_zoom: 16                 # 512 px tiles at zoom 16 = ~1.1 m per pixel at MG's latitude
+  tile_key_file: ~/GIS/.esri_api_key
+  tile_attribution: "Esri, Vantor, Earthstar Geographics, and the GIS User Community"
   tile_px: 768
   vlm: Qwen/Qwen2.5-VL-7B-Instruct
   vlm_fallback: Qwen/Qwen2.5-VL-3B-Instruct
