@@ -4,6 +4,51 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-02 (10)  Code review; Earth Engine restricted mode; review fixes
+------------------------------------------------------------------------------
+Overall: about 55% (unchanged). Full review of the code against PLAN.md: no leakage found
+(scalers, early stopping, tuning, hybrid weight and best-model choice all use train/val only;
+explanations use training captions of the matching round; the 1 km map is out-of-sample).
+
+Earth Engine
+  ! The project (Community tier, 150 EECU-hours/month) used up its quota and is in RESTRICTED MODE:
+    low concurrency, fewer workers, until the quota resets on 1 Nov. Downloads still work, slowly.
+    Faster option: link a Cloud billing account -> Contributor tier (1,000 EECU-h; Earth Engine
+    noncommercial use is not charged). Decision for the project owner.
+  ~ gee.py: tiles over the memory limit are split into quarters recursively (fetch_split); memory
+    errors are no longer retried at full size; rate-limit errors wait (up to 40 x <= 60 s) instead
+    of failing. Tests: test_gee_split.py, test_gee_retry.py.
+  - GSED download resumed from 512/652 tiles with --workers 3, then WorldCover (log ~/GIS/logs/*_gee.log).
+  - VIIRS done (viirs_2022.tif). OSM features ARE done (entry (1) said "not confirmed"): run on
+    2026-10-01 and again 2026-10-02 with identical totals.
+
+Review fixes
+  ~ 12_build_texts audit: each raw sentence is labelled once and the labeller never sees the drop
+    decisions. The old A/B design was not blind (the cleaned text is a subset of the raw one) and
+    labelled every sentence twice. Raw vs cleaned false-claim shares, cleaning precision and
+    recall, and kappa all come from the same blind labels. CLIP-dropped captions count as removed.
+    Test: test_audit.py.
+  ~ kaggle_captions: the pilot (LIMIT) is a seeded random sample, not the first files by cell_id
+    (= northernmost, poorest cells); the first captions are printed to catch broken fp16 output.
+  ~ 14_error_analysis: uncertainty plot and 1 km map use the best V3-V9 model (5-seed ensemble);
+    the headline best model can still be V10/V11/V12.
+
+Decisions taken
+  - Masking (difference 4 below): keep tree + bare >= 95% (code), not "tree or bare" (plan).
+  - Differences 1-15 below accepted; they go into the plan's "Changes from the proposal" list.
+
+Known, not fixed (mention in report)
+  - Claim check drops "field" sentences in towns ("sports field") when crop + grass < 10%; the audit measures it.
+  - V10 may blend a different base model in each round.
+  - RQ3: fact sentences already mention POIs/roads, so V7 vs V6 measures POI/roads as numbers on
+    top of text. Optional V6b (no POI/road sentences) not written.
+
+Still open (people, not code)
+  - Instructor approval of the study area (PLAN 0.1), Kaggle account (0.8), Esri licence check (4.1).
+
+Next: when GSED + WorldCover finish -> 06_build_cells -> 07 V3/V4 (5 rounds) -> 08 -> 09 (first RQ1 answer).
+
+------------------------------------------------------------------------------
 2026-10-02 (9)  Server check; second Earth Engine GSED fix
 ------------------------------------------------------------------------------
   + On gpu77: code pulled, pytest 30 passed (incl. the real folds file). viirs_2022.tif done

@@ -112,7 +112,7 @@ This phase produces `processed/texts.parquet` with three text versions for about
 7. **Cleaning pass 1 — remove filler.** Split captions into sentences. Drop sentences that match a configurable list of vague patterns ("comprehensive view", "overall scene", "gives a sense of", "the image shows a satellite view") and pure boilerplate. *Output:* per-sentence `drop_reason` column.
 8. **Cleaning pass 2 — check claims against data.** A small keyword lexicon maps words to checks. Water words (river, lake, pond, reservoir) need water ≥ 1% or waterway length > 0. Forest words need tree cover ≥ 10%. Farm words (crop, field, plantation, pasture) need crop + grass ≥ 10%. Building words need built-up ≥ 2% or at least one POI. Industry or mining words need an industry POI, built-up ≥ 5%, or the MapBiomas mining class. Delete sentences that fail, and log counts per rule. *Output:* cleaned captions.
 9. **Cleaning pass 3 — image–text match.** Score each tile against its cleaned caption with RemoteCLIP and drop the worst 5% of captions. Fix the cut-off on the pilot set, never on test data. Keep this step light: UrbanCLIP found fully automatic filtering unstable. *Output:* `clip_score` and `keep_caption` columns.
-10. **Audit 300 captions by hand.** Draw 300 captions at random. For each, show the tile beside the raw and the cleaned text in random order, without saying which is which. Mark every sentence as *correct*, *false claim* or *vague*. Report the share of captions with at least one false claim before and after cleaning, with 95% Wilson intervals. If a second person can label 50 of them, report their agreement (Cohen's kappa). *Output:* `reports/tables/caption_audit.csv` and a summary.
+10. **Audit 300 captions by hand.** Draw 300 captions at random. For each, show the tile beside its raw caption, one numbered sentence per line, without showing which sentences the cleaning dropped; raw and cleaned results are both computed from these labels. Mark every sentence as *correct*, *false claim* or *vague*. Report the share of captions with at least one false claim before and after cleaning, with 95% Wilson intervals. If a second person can label 50 of them, report their agreement (Cohen's kappa). *Output:* `reports/tables/caption_audit.csv` and a summary.
 11. **Assemble the final text table.** For each sampled cell store `text_raw` (raw caption), `text_full` (cleaned caption + fact sentences) and `text_facts` (fact sentences only). These three feed the text ablations. *Output:* `processed/texts.parquet`.
 
 ## Phase 5 — Stage A: image–text alignment (weeks 5–6)
@@ -262,3 +262,23 @@ Phases overlap wherever their inputs are ready early. If the term starts on a di
 - [ ] Stage C gets a log-sum pooling option, chosen on validation, because municipality sizes differ by 10,000×.
 - [ ] Added: block-bootstrap intervals for each RQ, Moran's I of residuals, LightGBM baseline (optional), sector shares in the error analysis.
 - [ ] Layer widths for Stages B and C are our choice; the report will say the embedding paper did not publish them.
+
+**Changes made during implementation (accepted 2026-10-02; details in progress.txt):**
+
+| # | Change | Effect on results |
+| --- | --- | --- |
+| 1 | Fold balance uses population density for "urban", not built-up share | None; folds are frozen and balanced |
+| 2 | Earth Engine layers downloaded directly (computePixels tiles), not exported via Drive | None |
+| 3 | Tiles over Earth Engine's memory limit are split into quarters; rate-limit errors wait instead of failing | None |
+| 4 | Masking drops a cell when tree + bare ≥ 95% (and nothing built, lit or mapped), not tree or bare alone | A few more empty cells dropped |
+| 5 | A municipality whose cells are all masked keeps its cells (logged) | Avoids empty sums |
+| 6 | NTL-only benchmark uses log(1 + total NTL) − log(pop), so dark towns stay finite | Negligible |
+| 7 | Stage C POI and road inputs both enter as log(1 + x) | None expected |
+| 8 | Predictions saved one file per variant and round | None |
+| 9 | Calibration line reported on validation and test | None |
+| 10 | Caption claim check skips sentences with a negation; MapBiomas mining check not used | Measured by the audit |
+| 11 | Stage C learning rate halves after 50 epochs without improvement; output bias starts at the training mean | Training converges |
+| 12 | Caption tiles crop the cell's Web Mercator bounding box (thin margin of neighbouring land) | Negligible |
+| 13 | CLIP cut-off fixed on a seeded 200-caption subset | None |
+| 14 | Caption audit labels each raw sentence once, blind to cleaning; raw and cleaned results derived from the same labels | Half the labelling, unbiased |
+| 15 | 2022 sector shares unavailable, so 2021 shares are used for flags and the error analysis | None on the target |
