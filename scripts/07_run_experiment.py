@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from itertools import product
 
 import numpy as np
@@ -128,13 +129,16 @@ def stage_c(cfg, r, variant, x, cells, labels, split, part) -> pd.DataFrame:
     c, seed = cfg["stage_c"], cfg["project"]["seed"]
 
     # 7.5 tuning grid, chosen on validation MSE only
-    rows = []
+    rows, t0 = [], time.time()
+    n_settings = int(np.prod([len(c["grid"][k]) for k in ("hidden", "weight_decay", "dropout", "pooling")]))
     for hidden, wd, dropout, pooling in product(*(c["grid"][k] for k in ("hidden", "weight_decay", "dropout", "pooling"))):
         torch.manual_seed(seed + r)
         m, log = train_stage_c(sets["train"], sets["val"], c, hidden, wd, dropout, pooling)
         mse = F.mse_loss(predict(m, sets["val"]), sets["val"].y).item()
         rows.append({"hidden": hidden, "weight_decay": wd, "dropout": dropout, "pooling": pooling,
                      "epochs": len(log), "val_mse": mse})
+        print(f"    setting {len(rows)}/{n_settings}: hidden {hidden}, wd {wd:g}, dropout {dropout}, {pooling}"
+              f" -> val MSE {mse:.4f} ({len(log)} epochs, {time.time() - t0:.0f} s)", flush=True)
     tuning = pd.DataFrame(rows)
     tdir = REPO_ROOT / cfg["paths"]["reports"] / "tables" / "stage_c_tuning"
     tdir.mkdir(parents=True, exist_ok=True)
@@ -149,6 +153,7 @@ def stage_c(cfg, r, variant, x, cells, labels, split, part) -> pd.DataFrame:
         m, _ = train_stage_c(sets["train"], sets["val"], c, best["hidden"], best["weight_decay"],
                              best["dropout"], best["pooling"])
         torch.save(m.state_dict(), data_path(cfg, "models", f"round{r}", f"stage_c_{variant}_seed{s}.pt"))
+        print(f"    seed {s + 1}/{c['n_seeds']} done ({time.time() - t0:.0f} s)", flush=True)
         for k in preds:
             preds[k].append(predict(m, sets[k]).numpy())
 
