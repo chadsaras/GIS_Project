@@ -41,5 +41,6 @@ def fit(model: nn.Module, loss_fn: Callable[..., torch.Tensor], train: tuple[tor
             wait += 1
             if wait >= patience:
                 break
+    assert best_state is not None, "validation loss was never finite: check the inputs for NaN/inf"
     model.load_state_dict(best_state)
     return log

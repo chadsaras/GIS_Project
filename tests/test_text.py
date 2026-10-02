@@ -40,3 +40,20 @@ def test_caption_sample_quota_and_weights():
     # weights add back up to the fold's cell count, so weighted statistics are unbiased
     fold_sizes = kept.muni_code.map(folds).value_counts().sort_index()
     np.testing.assert_allclose(s.groupby("fold").weight.sum().to_numpy(), fold_sizes.to_numpy(), rtol=0.15)
+
+
+def test_log_odds_marks_group_words():
+    from gisecon.text.words import log_odds_z
+    a, b = np.array([50, 5, 20]), np.array([5, 50, 20])  # word 0 typical of a, word 1 of b, word 2 shared
+    z = log_odds_z(a, b, a + b)
+    assert z[0] > 2 and z[1] < -2 and abs(z[2]) < 0.5
+
+
+def test_tile_range_covers_box():
+    import importlib.util
+    from gisecon.config import REPO_ROOT
+    spec = importlib.util.spec_from_file_location("tiles", REPO_ROOT / "scripts" / "11_download_tiles.py")
+    t = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(t)
+    (c0, c1, r0, r1), tm = t.tile_range(0.0, -1.0, 1.0, 0.0, 1)  # box just right of / below the origin
+    assert (c0, c1, r0, r1) == (1, 1, 1, 1) and abs(tm - t.HALF) < 1e-6  # zoom 1: 2 x 2 tiles, origin at the centre

@@ -4,6 +4,89 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-02 (8)  All remaining scripts written; plan-deviation review; Stage C fix
+------------------------------------------------------------------------------
+Overall: about 55% (was about 45%). Every script in PLAN.md now exists except the report and
+slides (Phase 11) and the optional growth extension (Phase 10). Remaining work is running them
+on real data, the captioning, hand-labelling the audit, and writing.
+
+Done since last entry
+  + scripts/10_caption_sample.py     PLAN 4.2   pick 2,000 cells per fold to caption
+  + scripts/11_download_tiles.py     PLAN 4.3   768 px image per sampled cell (Esri URL in config text.tile_url)
+  + scripts/kaggle_captions.py       PLAN 4.4-4.5  Qwen2.5-VL on Kaggle 2x T4, resumable JSONL (NOT tested
+                                     here: needs the 7B model on a GPU; pilot with LIMIT = 200 first)
+  + scripts/12_build_texts.py        PLAN 4.6-4.11 fact sentences, cleaning, optional RemoteCLIP filter,
+                                     texts.parquet, audit export (HTML + CSV) and audit scoring (Wilson CI, kappa)
+  + scripts/13_diagnostics.py        PLAN 5.6, 6.5  Stage A recall + linear probe, Stage B table, neighbour check
+  + scripts/14_error_analysis.py     PLAN 9.1-9.8  scatter, error regression (clustered SE), LOWESS, Moran's I,
+                                     top-10 gaps, uncertainty, 3 maps, out-of-sample 1 km activity map
+  + scripts/15_explanations.py       PLAN 9.9-9.10 nearest training captions, rich-vs-poor word contrast
+  + src/gisecon/text/words.py, eval/metrics.py (wilson, cohen_kappa)
+  ~ configs/config.yaml: text.tile_url added
+  ~ config.py: $GISECON_CONFIG can point to another config file (used for test runs)
+  ~ 09_evaluate.py: calibration line now also on validation (val_calib_*), as PLAN 8.7 says
+  ~ 08_baselines.py: V12 uses the same features as the ridge (PLAN 7.8); land cover removed
+  ~ Stage C bug fixed: output bias now starts at the training mean of log total GDP (~19). From 0,
+    Adam at lr 1e-3 could not reach it within 3,000 epochs (fake-state RMSE 3.4 -> 1.1). The unit
+    test now uses real-scale targets and fails without the fix.
+  ~ Training loops stop with a clear message if the validation loss is never finite (NaN inputs)
+  - Whole chain 06 -> 10 -> 12 -> 07 (V3-V9) -> 08 -> 09 -> 13 -> 14 -> 15 run end to end on a fake
+    80-municipality state: every script runs and writes its outputs. 29 tests pass.
+
+Watch on real data (Stage C)
+  On the fake state (only 48 training municipalities) Stage C overfits (train MSE 0.13, val 0.69)
+  and stays worse than the ridge baselines; it also starts with a large error because the sum over
+  ~100 cells is big before training. Real rounds have ~510 training municipalities, and a 300-town
+  synthetic test does learn, so this is expected, but check V3 round 0 against V11_gsed first.
+  PLAN's fallback applies: log-sum pooling, stronger weight decay, rely on the ridge / LightGBM rows.
+
+Differences from PLAN.md (tick the "Changes from the proposal" list with these)
+  Risk: none of these blocks or biases the research questions. "Undo" = what reverting costs.
+   1. Folds: "urban" = top third by population density, not built-up share (teammate's choice so
+      folds could be frozen before satellite data). Folds are balanced either way.
+      Undo: rerun 04 + everything after -> do NOT change; just report it.
+   2. Earth Engine: direct download (computePixels) instead of Drive export. No effect on values.
+   3. maxPixels was 16,384 (bug), now 65,536 as PLAN 2.3 says. Fixed.
+   4. Masking: drop if tree + bare >= 95% (plan: tree or bare >= 95%), still only when the cell has
+      no built-up, light, POI or road. Drops a few more empty cells. Undo: one line in data/cells.py,
+      but decide BEFORE the first real 06 run - changing it later means rerunning everything.
+   5. Municipalities whose cells are all masked keep their cells (addition; logged). Never silent.
+   6. V1: log(1 + total NTL) - log(pop) instead of log(total NTL / pop), so dark towns stay finite.
+      Undo: one line in 08, seconds to rerun.
+   7. Stage C POI/road inputs: road km also log(1 + x). Undo: one line; reruns V7-V9 Stage C (hours).
+   8. Predictions stored one file per variant and round (processed/predictions/), not one parquet,
+      so rounds can run in parallel. No effect on results.
+   9. Calibration: now on validation (as planned) and test both.
+  10. Caption cleaning: MapBiomas mining check not used (MapBiomas is optional); sentences with a
+      negation ("no river is visible") skip the claim check (addition, measured by the audit).
+  11. Stage C: grid "hidden" = per-cell hidden width; LR halves after 50 epochs without improvement;
+      early stopping waits one rolling window (100 epochs). Plan leaves these open.
+  12. Stage C output bias initialised at the training mean (see fix above). Implementation detail.
+  13. Stage A/B diagnostics: saved per round as JSON, gathered into the planned CSVs by script 13.
+  14. Caption tiles crop the cell's Web Mercator bounding box (the 1 km square is rotated up to ~2
+      degrees there, so a thin margin of neighbouring land is included).
+  15. CLIP cut-off fixed on a seeded 200-caption subset (plan: "on the pilot set"); uses no GDP data.
+
+Which scripts are LIGHT (run yourself) vs HEAVY (teammate, on gpu77 / Kaggle)
+  script                     cost                                    who
+  03_osm_features            ~10-30 min, ~10 GB RAM                  either
+  05_export_gee              hours, network-bound, low CPU           either (background)
+  06_build_cells             minutes, few GB RAM                     light
+  10_caption_sample          seconds                                 light
+  11_download_tiles          2-4 h network, ~200k requests, ~5 GB    either (background)
+  kaggle_captions            6-10 GPU-hours on Kaggle 2x T4          HEAVY (Kaggle)
+  12_build_texts             1 min; --clip adds 15-30 min CPU        light / medium
+  07_run_experiment          hours per round (Stage C grid x 5 seeds)  HEAVY (teammate, 5 rounds in parallel)
+  08_baselines, 09_evaluate  seconds-minutes                         light
+  13, 14, 15                 about a minute each                     light
+
+Full run order on gpu77
+  05 (running) + 03 -> 06 -> 07 V3/V4 + 08 + 09     first real numbers (RQ1), no captions needed
+  10 -> 11 (after licence check) -> kaggle_captions -> 12 [--clip] -> 12 --audit-export
+     -> hand-label audit_labels.csv -> 12 --audit-score
+  07 --variant all (V5-V9) -> 08 -> 09 -> 13 -> 14 -> 15
+
+------------------------------------------------------------------------------
 2026-10-01 (7)  Earth Engine download bug found and fixed
 ------------------------------------------------------------------------------
   - First full run (--tile 32 --workers 8) finished 0 GSED blocks in 14.5 min; job killed.

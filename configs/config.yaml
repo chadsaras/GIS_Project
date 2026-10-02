@@ -64,6 +64,7 @@ text:
   n_sample: 10000
   per_fold: 2000
   tile_zoom: 17
+  tile_url: https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}   # Esri World Imagery; licence check pending (Step 4.1)
   tile_px: 768
   vlm: Qwen/Qwen2.5-VL-7B-Instruct
   vlm_fallback: Qwen/Qwen2.5-VL-3B-Instruct

@@ -44,9 +44,9 @@ def _munis(n_munis, gen):
     sizes = torch.randint(1, 60, (n_munis,), generator=gen)
     idx = torch.repeat_interleave(torch.arange(n_munis), sizes)
     x = torch.randn(len(idx), 8, generator=gen)
-    cell_gdp = torch.exp(x[:, 0] + 0.5 * x[:, 1])
+    cell_gdp = torch.exp(x[:, 0] + 0.5 * x[:, 1] + 16.0)  # real scale: log total GDP ~19
     total = torch.zeros(n_munis).index_add_(0, idx, cell_gdp)
-    log_pop = torch.log(sizes.float()) + 0.3 * torch.randn(n_munis, generator=gen)
+    log_pop = torch.log(sizes.float()) + 0.3 * torch.randn(n_munis, generator=gen) + 6.0  # log pop ~9, log GDP pc ~10
     return MuniSet(x, idx, log_pop, torch.log(total) - log_pop)
 
 

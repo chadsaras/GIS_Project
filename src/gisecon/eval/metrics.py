@@ -27,3 +27,21 @@ def block_bootstrap_rmse_diff(y, pred_a, pred_b, block, reps: int, seed: int) ->
     point = np.sqrt(sa.sum() / n.sum()) - np.sqrt(sb.sum() / n.sum())
     lo, hi = np.percentile(diff, [2.5, 97.5])
     return float(point), float(lo), float(hi)
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float, float]:
+    """Share k/n with its 95% Wilson interval."""
+    if n == 0:
+        return float("nan"), float("nan"), float("nan")
+    p = k / n
+    c = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    mid = (p + z * z / (2 * n)) / (1 + z * z / n)
+    return p, mid - c, mid + c
+
+
+def cohen_kappa(a, b) -> float:
+    a, b = np.asarray(a), np.asarray(b)
+    labels = np.union1d(a, b)
+    po = (a == b).mean()
+    pe = sum((a == l).mean() * (b == l).mean() for l in labels)
+    return float((po - pe) / (1 - pe)) if pe < 1 else 1.0

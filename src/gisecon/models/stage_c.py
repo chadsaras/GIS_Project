@@ -52,7 +52,9 @@ def train_stage_c(train: MuniSet, val: MuniSet, cfg: dict, hidden: int, weight_d
     without a new low (or at max_epochs).
     """
     model = StageC(train.x.shape[1], hidden, cfg["cell_out"], cfg["muni_hidden"], dropout, pooling)
-    opt = torch.optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=weight_decay)
+    with torch.no_grad():  # start at the mean log total GDP (~19); from 0, Adam at lr 1e-3 cannot get there in time
+        model.muni[-1].bias.fill_(float((train.y + train.log_pop).mean()))
+    opt =torch.optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=weight_decay)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.5, patience=cfg["rolling_window"] // 2,
                                                        min_lr=cfg["lr_min"])
     w = cfg["rolling_window"]
@@ -76,6 +78,7 @@ def train_stage_c(train: MuniSet, val: MuniSet, cfg: dict, hidden: int, weight_d
             since += 1
             if since >= w:
                 break
+    assert best_state is not None, "validation loss was never finite: check the inputs for NaN/inf"
     model.load_state_dict(best_state)
     return model, log
 

@@ -33,3 +33,11 @@ def test_blend_chooses_weight_on_validation():
     model, ntl = {"val": y_val, "test": np.zeros(2)}, {"val": y_val + 1, "test": np.ones(2)}
     pred, a = bl.blend(model, ntl, y_val, [0.0, 0.25, 0.5, 0.75, 1.0])
     assert a == 1.0 and np.allclose(pred["test"], 0)
+
+
+def test_wilson_and_kappa():
+    from gisecon.eval.metrics import cohen_kappa, wilson
+    p, lo, hi = wilson(30, 300)
+    assert p == 0.1 and 0.07 < lo < 0.1 < hi < 0.14
+    assert cohen_kappa(["a", "b", "a"], ["a", "b", "a"]) == 1.0
+    assert abs(cohen_kappa(["a", "b"] * 50, ["a"] * 50 + ["b"] * 50)) < 0.05  # agreement at chance level

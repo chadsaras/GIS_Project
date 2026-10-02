@@ -4,7 +4,7 @@
   V2   ridge on mean land-cover shares + log kept cells + log pop
   V11  ridge on mean cell embeddings + log kept cells + log pop: raw GSED (V11_gsed) and every
        cached Stage A / Stage B embedding of the round (V11_emb_A_full, V11_z_gsed, ...)
-  V12  LightGBM on mean GSED + land cover + log kept cells + log pop (skipped if lightgbm is missing)
+  V12  LightGBM on the V11_gsed features: mean GSED + log kept cells + log pop (skipped if lightgbm is missing)
   V10  hybrid: the V3-V9 run with the lowest validation MSE blended with V1 (weight chosen on validation)
 
 Usage: python scripts/08_baselines.py --round 0      (run after 07_run_experiment.py for V10)
@@ -83,7 +83,7 @@ def main(argv: list[str] | None = None) -> None:
         save(f"V11_{f.stem}", pred, f"alpha={a:g}")
 
     try:
-        save("V12", bl.lightgbm(feats(GSED + lc + base), y, seed), "lightgbm")
+        save("V12", bl.lightgbm(feats(GSED + base), y, seed), "lightgbm")
     except ImportError:
         print("V12 skipped: lightgbm not installed")
 

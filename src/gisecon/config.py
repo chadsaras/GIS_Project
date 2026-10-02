@@ -1,4 +1,4 @@
-"""Load configs/config.yaml and resolve data paths."""
+"""Load configs/config.yaml (or the file in $GISECON_CONFIG) and resolve data paths."""
 from __future__ import annotations
 
 import os
@@ -16,7 +16,7 @@ def _expand(p: str) -> Path:
 
 
 def load_config(path: str | Path | None = None) -> dict[str, Any]:
-    with open(path or DEFAULT_CONFIG, encoding="utf-8") as f:
+    with open(path or os.environ.get("GISECON_CONFIG") or DEFAULT_CONFIG, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     data_dir = os.environ.get("GISECON_DATA_DIR") or cfg["paths"]["data_dir"]
     cfg["paths"]["data_dir"] = str(_expand(data_dir))

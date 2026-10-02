@@ -44,7 +44,9 @@ def main(argv: list[str] | None = None) -> None:
                      **scores(d["y_true"].to_numpy(), d["y_pred"].to_numpy()),
                      "rmse_round_mean": per_round.mean(), "rmse_round_sd": per_round.std(),
                      "rmse_unflagged": np.sqrt(((d.y_pred - d.y_true)[~flagged] ** 2).mean()),
-                     "val_rmse": np.sqrt(((val.y_pred - val.y_true) ** 2).mean())})
+                     "val_rmse": np.sqrt(((val.y_pred - val.y_true) ** 2).mean()),
+                     **{f"val_{k}": x for k, x in scores(val["y_true"].to_numpy(), val["y_pred"].to_numpy()).items()
+                        if k.startswith("calib")}})
     res = pd.DataFrame(rows).sort_values("variant", key=lambda s: s.str.extract(r"V(\d+)")[0].astype(int))
     res.round(4).to_csv(tables / "main_results.csv", index=False)
     print(res.round(3).to_string(index=False))
