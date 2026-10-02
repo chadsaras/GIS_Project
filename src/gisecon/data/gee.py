@@ -27,11 +27,12 @@ def gsed_image(collection: str, year: int, crs: str):
     """64 embedding bands averaged to the grid, plus 'coverage' = share of 10 m pixels with data."""
     import ee
     col = ee.ImageCollection(collection).filterDate(f"{year}-01-01", f"{year + 1}-01-01")
-    native = col.first().projection()
-    img = col.mosaic().setDefaultProjection(native)
+    # Read the mosaic at 10 m in the grid's own CRS. GSED tiles each sit in their own UTM zone, and
+    # col.first() may be a tile far from the study area: using its projection warped the state ~2.8x
+    # ("Need 38155 input pixels", "Reprojection output too large"). Here a 1 km cell is 100 x 100 pixels.
+    img = col.mosaic().setDefaultProjection(crs=crs, scale=10)
     cov = img.select(0).mask().rename("coverage")
-    out = img.addBands(cov.toFloat()).setDefaultProjection(native)
-    # EE needs ~38k input pixels per 1 km cell here (native UTM tiles are skewed vs EPSG:31983); 65536 is its cap
+    out = img.addBands(cov.toFloat()).setDefaultProjection(crs=crs, scale=10)
     return out.reduceResolution(ee.Reducer.mean(), maxPixels=65536)
 
 

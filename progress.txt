@@ -4,6 +4,19 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-02 (9)  Server check; second Earth Engine GSED fix
+------------------------------------------------------------------------------
+  + On gpu77: code pulled, pytest 30 passed (incl. the real folds file). viirs_2022.tif done
+    (2026-10-01 19:38). Remember `conda activate gisecon` first - pytest is only in that env.
+  - GSED download failed on every tile: "Reprojection output too large (~9000 x 9000 pixels)".
+  ~ gee.gsed_image: read the GSED mosaic at 10 m in the grid CRS (EPSG:31983) instead of the
+    projection of col.first(). GSED tiles each have their own UTM zone and col.first() can be a
+    tile far from MG; using it (most likely) warped the state ~2.8x, which also caused the earlier
+    "Need 38155 input pixels" error. Now a 1 km cell = 100 x 100 input pixels, a 32 km tile = 3,200 px.
+    VIIRS and WorldCover unchanged (single images, own projection fine).
+  - Next: commit + pull, rerun the GSED timing test, then restart the gsed + worldcover download.
+
+------------------------------------------------------------------------------
 2026-10-02 (8)  All remaining scripts written; plan-deviation review; Stage C fix
 ------------------------------------------------------------------------------
 Overall: about 55% (was about 45%). Every script in PLAN.md now exists except the report and
