@@ -71,3 +71,16 @@ def test_tile_range_covers_box():
     spec.loader.exec_module(t)
     (c0, c1, r0, r1), tm = t.tile_range(0.0, -1.0, 1.0, 0.0, 1)  # box just right of / below the origin
     assert (c0, c1, r0, r1) == (1, 1, 1, 1) and abs(tm - t.HALF) < 1e-6  # zoom 1: 2 x 2 tiles, origin at the centre
+
+
+def test_clean_caption_pilot_patterns():
+    """Patterns seen in the Qwen pilot: summary filler and a sentence cut off at the token limit are dropped,
+    but an informative first sentence that starts with 'This satellite image ...' is kept."""
+    cell = {"lc_built": 0.8, "lc_tree": 0.1, "lc_water": 0.0, "water_km": 0.0, "lc_crop": 0.0, "lc_grass": 0.1}
+    text = ("This satellite image captures a densely populated urban area with red-tiled roofs. "
+            "The roads form a grid. The overall impression is one of a bustling town. "
+            "Overall, the image shows a residential area. Small green spaces are scattered across the")
+    cleaned, rows = clean_caption(text, cell)
+    reasons = [r["drop_reason"] for r in rows]
+    assert reasons == [None, None, "filler", "filler", "truncated"]
+    assert cleaned.startswith("This satellite image captures a densely populated urban area")

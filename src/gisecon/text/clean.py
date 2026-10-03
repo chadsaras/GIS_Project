@@ -4,8 +4,10 @@ from __future__ import annotations
 import re
 from typing import Mapping
 
-FILLER = [r"comprehensive view", r"overall scene", r"gives? a sense of", r"the image shows a satellite view",
-          r"^this (satellite|aerial) image", r"bird'?s[- ]eye view", r"captured from above"]
+FILLER = [r"comprehensive view", r"overall (scene|impression|picture)", r"gives? a sense of",
+          r"the image shows a satellite view", r"bird'?s[- ]eye view", r"captured from above", r"^overall,"]
+# Note: sentences that merely *start* with "This satellite image shows ..." are kept: they usually carry the
+# main description (e.g. "... captures a densely populated urban area").
 
 # word pattern -> check on the cell's numbers; a sentence that names the thing fails if the check is False
 CLAIMS = {
@@ -37,7 +39,11 @@ def split_sentences(text: str) -> list[str]:
 def clean_caption(text: str, cell: Mapping) -> tuple[str, list[dict]]:
     """(cleaned text, one {sentence, drop_reason} per sentence; drop_reason None = kept)."""
     rows = []
-    for s in split_sentences(text):
+    sents = split_sentences(text)
+    for i, s in enumerate(sents):
+        if i == len(sents) - 1 and not s.rstrip().endswith((".", "!", "?")):  # cut off at the token limit
+            rows.append({"sentence": s, "drop_reason": "truncated"})
+            continue
         reason = "filler" if _FILLER_RE.search(s) else None
         if reason is None and not NEGATION.search(s):
             reason = next((f"claim_{k}" for k, (_, ok) in CLAIMS.items() if _CLAIM_RE[k].search(s) and not ok(cell)),
