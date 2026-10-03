@@ -29,6 +29,7 @@ dependencies:
     - earthengine-api
     - geemap
     - sidrapy
+    - kaggle                    # optional: upload the caption tiles (scripts/16_kaggle_dataset.py)
     - --extra-index-url https://download.pytorch.org/whl/cpu
     - torch
     - sentence-transformers
