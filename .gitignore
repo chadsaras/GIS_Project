@@ -29,3 +29,8 @@ credentials*
 Thumbs.db
 .vscode/
 .idea/
+
+# API tokens and keys: never commit
+kaggle*.json
+access_token
+*api_key*
