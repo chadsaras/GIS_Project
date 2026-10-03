@@ -1,8 +1,10 @@
 """Stage C: municipal log GDP per capita from cell embeddings by sum-pooling (PLAN Phase 7).
 
-Each cell gets a non-negative 16-number contribution p(x); contributions are summed per
-municipality (optionally log(1 + sum), since municipalities range from 1 to ~10,000 cells), and
-h maps the pooled vector to log total GDP. Subtracting log population gives log GDP per capita.
+Each cell gets a non-negative 16-number contribution p(x); contributions are pooled per municipality
+and h maps the pooled vector to log total GDP. Subtracting log population gives log GDP per capita.
+Pooling: "sum" (as in the embedding paper), "logsum" = log(1 + sum) (municipalities range from 1 to
+~10,000 cells), or "mean" = average contribution plus log(cell count) as an extra input, so h still
+knows the municipality's size.
 """
 from __future__ import annotations
 
@@ -28,17 +30,21 @@ class StageC(nn.Module):
     def __init__(self, d_in: int, cell_hidden: int = 32, cell_out: int = 16, muni_hidden: int = 16,
                  dropout: float = 0.1, pooling: str = "sum"):
         super().__init__()
-        assert pooling in ("sum", "logsum")
+        assert pooling in ("sum", "logsum", "mean")
         self.pooling = pooling
         self.cell = nn.Sequential(nn.Linear(d_in, cell_hidden), nn.ReLU(), nn.Dropout(dropout),
                                   nn.Linear(cell_hidden, cell_out), nn.Softplus())
-        self.muni = nn.Sequential(nn.Linear(cell_out, muni_hidden), nn.ReLU(), nn.Linear(muni_hidden, 1))
+        d_muni = cell_out + (1 if pooling == "mean" else 0)
+        self.muni = nn.Sequential(nn.Linear(d_muni, muni_hidden), nn.ReLU(), nn.Linear(muni_hidden, 1))
 
     def forward(self, s: MuniSet) -> torch.Tensor:
         c = self.cell(s.x)
         pooled = torch.zeros(len(s.log_pop), c.shape[1], dtype=c.dtype).index_add_(0, s.idx, c)
         if self.pooling == "logsum":
             pooled = torch.log1p(pooled)
+        elif self.pooling == "mean":
+            n = torch.bincount(s.idx, minlength=len(s.log_pop)).clamp(min=1).to(c.dtype)
+            pooled = torch.cat([pooled / n[:, None], torch.log(n)[:, None]], dim=1)
         return self.muni(pooled).squeeze(-1) - s.log_pop
 
 
@@ -87,4 +93,14 @@ def train_stage_c(train: MuniSet, val: MuniSet, cfg: dict, hidden: int, weight_d
 def predict(model: StageC, s: MuniSet) -> torch.Tensor:
     model.eval()
     return model(s)
+
+
+def fit_calibration(pred_val: np.ndarray, y_val: np.ndarray) -> tuple[float, float]:
+    """Straight-line correction official ~ a + b * predicted, fitted on validation municipalities only.
+
+    Stage C predictions tend to be over-dispersed (slope b < 1 on held-out data); applying a + b * pred
+    to test predictions removes that without touching the test labels.
+    """
+    b, a = np.polyfit(pred_val, y_val, 1)
+    return float(a), float(b)
 

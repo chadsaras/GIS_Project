@@ -1,10 +1,11 @@
 """Stages A-C on small synthetic data: each must learn a planted signal well above chance."""
+import numpy as np
 import torch
 
 from gisecon.config import load_config
 from gisecon.models.stage_a import embed_cells as embed_a, recall_at_k, train_stage_a
 from gisecon.models.stage_b import embed_cells as embed_b, train_stage_b
-from gisecon.models.stage_c import MuniSet, StageC, predict, train_stage_c
+from gisecon.models.stage_c import MuniSet, StageC, fit_calibration, predict, train_stage_c
 
 CFG = load_config()
 
@@ -55,7 +56,7 @@ def test_stage_c_pooling_is_order_invariant():
     s = _munis(20, torch.Generator().manual_seed(0))
     perm = torch.randperm(len(s.idx))
     shuffled = MuniSet(s.x[perm], s.idx[perm], s.log_pop)
-    for pooling in ("sum", "logsum"):
+    for pooling in ("sum", "logsum", "mean"):
         m = StageC(8, pooling=pooling)
         assert torch.allclose(predict(m, s), predict(m, shuffled), atol=1e-5)
 
@@ -67,3 +68,19 @@ def test_stage_c_learns_from_municipal_totals():
     cfg = {**CFG["stage_c"], "max_epochs": 800, "rolling_window": 30}
     model, log = train_stage_c(train, val, cfg, hidden=32, weight_decay=1e-4, dropout=0.1, pooling="logsum")
     assert _r2(predict(model, val), val.y) > 0.5, log[-1]
+
+
+def test_mean_pooling_sees_municipality_size():
+    """Two municipalities with identical cells but different counts must get different predictions."""
+    torch.manual_seed(0)
+    x = torch.ones(5, 8)
+    s = MuniSet(x, torch.tensor([0, 1, 1, 1, 1]), torch.zeros(2))
+    out = predict(StageC(8, pooling="mean"), s)
+    assert not torch.isclose(out[0], out[1])
+
+
+def test_fit_calibration_recovers_line():
+    pred = np.linspace(9, 11, 50)
+    y = 2.0 + 0.8 * pred
+    a, b = fit_calibration(pred, y)
+    assert abs(a - 2.0) < 1e-9 and abs(b - 0.8) < 1e-9

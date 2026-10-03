@@ -107,11 +107,11 @@ stage_c:
   max_epochs: 3000
   rolling_window: 100
   n_seeds: 5
-  grid:
-    hidden: [16, 32]
-    weight_decay: [1.0e-4, 1.0e-3]
-    dropout: [0.1, 0.3]
-    pooling: [sum, logsum]
+  grid:                         # revised 2026-10-03 after V3/V4: "sum" never won (median val MSE 2.27 vs 0.33),
+    hidden: [32, 64]            # hidden 32 and dropout 0.1 always won; stronger weight decay and mean pooling added
+    weight_decay: [1.0e-4, 1.0e-3, 1.0e-2]
+    dropout: [0.1]
+    pooling: [logsum, mean]
 
 hybrid:
   alphas: [0.0, 0.25, 0.5, 0.75, 1.0]

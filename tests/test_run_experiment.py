@@ -79,7 +79,9 @@ def test_runner_end_to_end(setup):
     assert preds.groupby("split").size().to_dict() == {"test": 8, "val": 8}  # folds 0 and 1
     assert set(preds[preds.split == "test"].muni_code % 5) == {0}
     assert (preds.ens_min <= preds.y_pred).all() and (preds.y_pred <= preds.ens_max).all()
-    assert len(pd.read_csv(tmp_path / "reports/tables/stage_c_tuning/V7_r0.csv")) == 16
+    grid = runner.load_config(cfg_file)["stage_c"]["grid"]
+    assert len(pd.read_csv(tmp_path / "reports/tables/stage_c_tuning/V7_r0.csv")) == int(np.prod([len(v) for v in grid.values()]))
+    assert {"y_pred_raw", "calib_a", "calib_b"} <= set(preds.columns)
 
 
 def test_baselines_and_evaluation_over_all_rounds(setup):

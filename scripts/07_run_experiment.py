@@ -37,7 +37,7 @@ from gisecon.config import REPO_ROOT, data_path, ensure_dirs, load_config
 from gisecon.eval.folds import get_split
 from gisecon.models.stage_a import embed_cells as embed_a, recall_at_k, train_stage_a
 from gisecon.models.stage_b import embed_cells as embed_b, train_stage_b
-from gisecon.models.stage_c import MuniSet, predict, train_stage_c
+from gisecon.models.stage_c import MuniSet, fit_calibration, predict, train_stage_c
 
 VARIANTS = {  # (Stage A text variant or None for raw GSED, Stage B on, POI/roads appended) - PLAN 8.4
     "V3": (None, False, False),
@@ -157,13 +157,20 @@ def stage_c(cfg, r, variant, x, cells, labels, split, part) -> pd.DataFrame:
         for k in preds:
             preds[k].append(predict(m, sets[k]).numpy())
 
-    # 7.9 one prediction format
+    # recalibration a + b * prediction, fitted on validation only (Stage C is over-dispersed)
+    pv = np.stack(preds["val"]).mean(0)
+    a, b = fit_calibration(pv, sets["val"].y.numpy())
+    print(f"  calibration on validation: official = {a:.3f} + {b:.3f} * predicted", flush=True)
+
+    # 7.9 one prediction format; y_pred is calibrated, y_pred_raw is the ensemble mean before calibration
     out = []
     for k, p in preds.items():
         p = np.stack(p)
+        lo, hi = a + b * p.min(0), a + b * p.max(0)
         out.append(pd.DataFrame({"variant": variant, "round": r, "split": k, "muni_code": getattr(split, k),
-                                 "y_true": sets[k].y.numpy(), "y_pred": p.mean(0),
-                                 "ens_min": p.min(0), "ens_max": p.max(0)}))
+                                 "y_true": sets[k].y.numpy(), "y_pred": a + b * p.mean(0),
+                                 "ens_min": np.minimum(lo, hi), "ens_max": np.maximum(lo, hi),
+                                 "y_pred_raw": p.mean(0), "calib_a": a, "calib_b": b}))
     return pd.concat(out, ignore_index=True)
 
 
