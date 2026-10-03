@@ -2,7 +2,7 @@
 
 Usage:
   python scripts/16_kaggle_dataset.py            # zip -> DATA_DIR/kaggle/gisecon-tiles/ (+ dataset-metadata.json)
-  python scripts/16_kaggle_dataset.py --upload   # also upload with the kaggle CLI (needs ~/.kaggle/kaggle.json)
+  python scripts/16_kaggle_dataset.py --upload   # also upload with the kaggle CLI (~/.kaggle/access_token or kaggle.json)
 Without a token, upload DATA_DIR/kaggle/gisecon-tiles/gisecon-tiles.zip by hand (docs/kaggle_steps.md).
 """
 from __future__ import annotations
@@ -18,6 +18,19 @@ from pathlib import Path
 import pandas as pd
 
 from gisecon.config import data_path, load_config
+
+
+def kaggle_username(kaggle: str) -> str:
+    """Username of the configured Kaggle credentials: ~/.kaggle/kaggle.json (legacy key) or ~/.kaggle/access_token
+    (KGAT_ token), read through `kaggle config view` so both work."""
+    legacy = Path.home() / ".kaggle" / "kaggle.json"
+    if legacy.exists():
+        return json.loads(legacy.read_text())["username"]
+    view = subprocess.run([kaggle, "config", "view"], capture_output=True, text=True, check=True).stdout
+    for line in view.splitlines():
+        if line.strip().startswith("- username:"):
+            return line.split(":", 1)[1].strip()
+    raise SystemExit("no Kaggle credentials: put a token in ~/.kaggle/access_token (or kaggle.json)")
 
 
 def main() -> None:
@@ -50,12 +63,10 @@ def main() -> None:
     if not args.upload:
         print("next: upload the zip by hand (docs/kaggle_steps.md), or rerun with --upload after adding a token")
         return
-    token = Path.home() / ".kaggle" / "kaggle.json"
-    assert token.exists(), f"no Kaggle API token at {token}"
-    user = json.loads(token.read_text())["username"]
+    kaggle = shutil.which("kaggle") or str(Path(sys.prefix) / "bin" / "kaggle")
+    user = kaggle_username(kaggle)
     meta["id"] = f"{user}/{args.slug}"
     (out / "dataset-metadata.json").write_text(json.dumps(meta, indent=2))
-    kaggle = shutil.which("kaggle") or str(Path(sys.prefix) / "bin" / "kaggle")
     subprocess.run([kaggle, "datasets", "create", "-p", str(out)], check=True)  # private by default
     print(f"uploaded: https://www.kaggle.com/datasets/{user}/{args.slug}")
 
