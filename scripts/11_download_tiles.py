@@ -1,7 +1,7 @@
 """Phase 4.3: one 768 x 768 PNG per sampled cell from an XYZ imagery service (config text.tile_url).
 
-Source (PLAN 4.1): Esri World Imagery via the ArcGIS Static Basemap Tiles service, imagery style without
-labels, 512 px tiles at zoom 16 (~5 tiles per cell, ~50-60k for 10,000 cells, within the 2M/month free tier).
+Source (PLAN 4.1): Esri World Imagery through the ArcGIS Location Platform (the raster source of the Basemap Styles
+"arcgis/imagery" style), no labels, 256 px tiles at zoom 17 (~16-20 tiles per cell, ~200k for 10,000 cells).
 The API key comes from $ESRI_API_KEY or the file in text.tile_key_file; it is never written to the repo.
 LONG but light (hours, network-bound, ~5 GB). Resumable: finished PNGs are skipped.
 
