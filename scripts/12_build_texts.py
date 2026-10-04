@@ -77,7 +77,7 @@ def build(cfg, captions_path, use_clip: bool) -> None:
     d["text_raw"], d["text_facts"], d["cleaned"] = d["caption"], facts, cleaned
     d["clip_score"], d["keep_caption"] = np.nan, d["cleaned"].str.len() > 0
     if use_clip:
-        has = d["keep_caption"].to_numpy()
+        has = d["keep_caption"].to_numpy().copy()  # copy: keep_caption is changed below
         d.loc[has, "clip_score"] = clip_scores(cfg, d.loc[has, "cell_id"].tolist(), d.loc[has, "cleaned"].to_numpy())
         # cut-off fixed on a seeded 200-caption pilot subset (PLAN 4.9); uses no GDP information
         pilot = d.loc[has, "clip_score"].sample(min(200, has.sum()), random_state=cfg["project"]["seed"])
