@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -52,6 +53,12 @@ def build(cfg, captions_path, use_clip: bool) -> None:
     caps = pd.DataFrame([json.loads(line) for line in open(captions_path)]).drop_duplicates("cell_id", keep="last")
     sample = pd.read_parquet(data_path(cfg, "interim", "caption_sample.parquet"))
     cells = pd.read_parquet(data_path(cfg, "processed", "cells.parquet")).set_index("cell_id")
+    bfile = data_path(cfg, "interim", "buildings.parquet")  # building evidence for the claim checks (03b)
+    if bfile.exists():
+        b = pd.read_parquet(bfile).set_index("cell_id")
+        cells = cells.join(b).fillna({"ms_buildings": 0, "osm_buildings": 0})
+    else:
+        print("warning: interim/buildings.parquet missing, building claims use WorldCover and POIs only")
     d = sample[["cell_id"]].merge(caps[["cell_id", "caption"]], on="cell_id", how="left")
     print(f"{d.caption.notna().sum():,} of {len(d):,} sampled cells have a caption")
     d["caption"] = d["caption"].fillna("")
@@ -94,12 +101,15 @@ def audit_export(cfg) -> None:
     adir = data_path(cfg, "interim", "audit")
     adir.mkdir(exist_ok=True)
     tiles = data_path(cfg, "raw", "tiles")
+    (adir / "tiles").mkdir(exist_ok=True)  # self-contained folder: copy the tiles so it works on any computer
+    for cid in cids:
+        shutil.copy(tiles / f"{cid}.png", adir / "tiles" / f"{cid}.png")
     page = ["<html><meta charset='utf-8'><body style='font-family:sans-serif;max-width:1100px'>",
             "<p>Label each sentence in audit_labels.csv: <b>correct</b>, <b>false</b> (claims something not "
             "in the image) or <b>vague</b> (true but says nothing specific).</p>"]
     for cid in cids:
         s = sents[sents["cell_id"] == cid]
-        page.append(f"<h3>cell {cid}</h3><img src='file://{tiles / f'{cid}.png'}' width=384><p>"
+        page.append(f"<h3>cell {cid}</h3><img src='tiles/{cid}.png' width=384><p>"
                     + "<br>".join(f"{i}. {html.escape(t)}" for i, t in zip(s["sent_idx"], s["sentence"])))
     (adir / "audit.html").write_text("\n".join(page))
     out = sents[["cell_id", "sent_idx", "sentence"]].assign(label="", label2="")

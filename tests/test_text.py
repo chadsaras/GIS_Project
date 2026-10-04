@@ -84,3 +84,16 @@ def test_clean_caption_pilot_patterns():
     reasons = [r["drop_reason"] for r in rows]
     assert reasons == [None, None, "filler", "filler", "truncated"]
     assert cleaned.startswith("This satellite image captures a densely populated urban area")
+
+
+def test_clean_caption_building_and_road_evidence():
+    """Buildings from footprint data count even where WorldCover shows no built-up land; dense/urban claims
+    need a real settlement; paved-road claims need a mapped road (dirt tracks are not checked)."""
+    rural = {"lc_built": 0.0, "lc_grass": 0.5, "lc_tree": 0.3, "ms_buildings": 3, "osm_buildings": 0}
+    text = ("A few small buildings are scattered near the corner. The area is densely built-up with urban blocks. "
+            "A paved road crosses the image. Dirt tracks cross the fields.")
+    _, rows = clean_caption(text, rural)
+    assert [r["drop_reason"] for r in rows] == [None, "claim_urban", "claim_road", None]
+    empty = {"lc_built": 0.0, "lc_tree": 0.9}
+    _, rows = clean_caption("Scattered small structures are visible.", empty)
+    assert rows[0]["drop_reason"] == "claim_building"

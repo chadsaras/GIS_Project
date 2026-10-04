@@ -16,6 +16,9 @@ def test_audit_export_and_score(tmp_path, monkeypatch):
     (data / "processed").mkdir(parents=True)
     (data / "interim").mkdir()
     (tmp_path / "reports" / "tables").mkdir(parents=True)
+    (data / "raw" / "tiles").mkdir(parents=True)
+    for c in range(12):  # the export copies each tile into the self-contained audit folder
+        (data / "raw" / "tiles" / f"{c}.png").write_bytes(b"png")
     monkeypatch.setenv("GISECON_DATA_DIR", str(data))
     monkeypatch.setattr(bt, "REPO_ROOT", tmp_path)
     cfg = load_config()
@@ -36,6 +39,7 @@ def test_audit_export_and_score(tmp_path, monkeypatch):
     bt.audit_export(cfg)
     sheet = pd.read_csv(data / "interim" / "audit" / "audit_labels.csv")
     assert len(sheet) == 36 and "drop_reason" not in sheet  # labeller cannot see the cleaning decisions
+    assert len(list((data / "interim" / "audit" / "tiles").glob("*.png"))) == 12
     truth = pd.DataFrame(sents).assign(sent_idx=lambda d: d.groupby("cell_id").cumcount(), label=labels)
     sheet = sheet.drop(columns="label").merge(truth[["cell_id", "sent_idx", "label"]], on=["cell_id", "sent_idx"])
     sheet.to_csv(data / "interim" / "audit" / "audit_labels.csv", index=False)

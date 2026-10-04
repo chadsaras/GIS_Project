@@ -17,11 +17,20 @@ CLAIMS = {
                lambda c: c.get("lc_tree", 0) >= 0.10),
     "farm": (r"crops?|cropland|fields?|plantations?|pastures?|farmland|agricultur\w*",
              lambda c: c.get("lc_crop", 0) + c.get("lc_grass", 0) >= 0.10),
-    "building": (r"buildings?|houses?|residential|urban|rooftops?|roofs?",
-                 lambda c: c.get("lc_built", 0) >= 0.02 or _poi_total(c) >= 1),
+    # dense / urban claims need a real settlement; "any building" claims need just one detected building
+    "urban": (r"densely (built|populated)|dense (urban|residential|housing)|urban|city|cities|town|downtown|"
+              r"high-rise|apartment blocks?|multi-stor(e)?y",
+              lambda c: c.get("lc_built", 0) >= 0.05 or _buildings(c) >= 50),
+    "building": (r"buildings?|houses?|homes?|residential|rooftops?|roofs?|structures?|settlements?|villages?",
+                 lambda c: c.get("lc_built", 0) >= 0.02 or _poi_total(c) >= 1 or _buildings(c) >= 1),
+    # paved-road words only: dirt tracks and paths are often missing from OSM, so they are not checked
+    "road": (r"roads?|streets?|highways?|avenues?",
+             lambda c: _road_km(c) > 0 or c.get("lc_built", 0) >= 0.01 or _buildings(c) >= 5),
     "industry": (r"industrial|factor(y|ies)|warehouses?|min(e|es|ing)|quarr(y|ies)",
                  lambda c: c.get("poi_industry", 0) >= 1 or c.get("lc_built", 0) >= 0.05),
 }
+# Building evidence (scripts/03b_buildings.py): Microsoft ML footprints + OSM buildings, so isolated farm
+# buildings that WorldCover's 10 m built-up class misses still count.
 # ponytail: sentences with a negation ("no river is visible") skip the claim check; a parser would do better
 NEGATION = re.compile(r"\b(no|not|without|absence|lack|none)\b", re.I)
 _FILLER_RE = re.compile("|".join(FILLER), re.I)
@@ -30,6 +39,14 @@ _CLAIM_RE = {k: re.compile(rf"\b({p})\b", re.I) for k, (p, _) in CLAIMS.items()}
 
 def _poi_total(c: Mapping) -> float:
     return sum(v for k, v in c.items() if k.startswith("poi_"))
+
+
+def _buildings(c: Mapping) -> float:
+    return max(c.get("ms_buildings", 0), c.get("osm_buildings", 0))
+
+
+def _road_km(c: Mapping) -> float:
+    return sum(v for k, v in c.items() if k.startswith("road_") and k.endswith("_km"))
 
 
 def split_sentences(text: str) -> list[str]:
