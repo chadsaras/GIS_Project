@@ -1,0 +1,35 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  mname/.style={font=\sffamily\fontsize{8}{9.6}\selectfont,text=kgpink,anchor=east,inner sep=0pt},
+  num/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,inner sep=1pt},
+  tick/.style={font=\sffamily\fontsize{7}{8.4}\selectfont,text=mdlgrey,anchor=north}]
+\draw[mdlgrey!35,line width=0.4pt,dashed] (0.00,0.55) -- (0.00,-1.85);
+\node[tick] at (0.00,-1.93) {0.40};
+\draw[mdlgrey!35,line width=0.4pt,dashed] (1.50,0.55) -- (1.50,-1.85);
+\node[tick] at (1.50,-1.93) {0.45};
+\draw[mdlgrey!35,line width=0.4pt,dashed] (3.00,0.55) -- (3.00,-1.85);
+\node[tick] at (3.00,-1.93) {0.50};
+\draw[mdlgrey!35,line width=0.4pt,dashed] (4.50,0.55) -- (4.50,-1.85);
+\node[tick] at (4.50,-1.93) {0.55};
+\draw[mdlgrey!35,line width=0.4pt,dashed] (6.00,0.55) -- (6.00,-1.85);
+\node[tick] at (6.00,-1.93) {0.60};
+\draw[mdlgrey,line width=0.5pt] (0,-1.85) -- (6.00,-1.85);
+\node[tick] at (3.00,-2.3) {RMSE on held-out municipalities (lower is better)};
+\node[mname] at (-0.2,-0.00) {GSED + Stage C};
+\draw[-{Stealth[length=2.4mm]},kgpnavy,line width=1.6pt] (4.48,-0.00) -- (1.35,-0.00);
+\node[circle,draw=mdlgrey,fill=white,line width=1pt,minimum size=2.6mm,inner sep=0pt] at (4.63,-0.00) {};
+\node[circle,fill=kgpnavy,minimum size=2.8mm,inner sep=0pt] at (1.17,-0.00) {};
+\node[num,text=mdlgrey,anchor=south] at (4.63,0.14) {0.554};
+\node[num,text=kgpnavy,anchor=south] at (1.17,0.14) {0.439};
+\node[num,text=kgpgreen,anchor=north] at (2.90,-0.12) {-21\%};
+\node[mname] at (-0.2,-1.15) {GSED + steering + C};
+\draw[-{Stealth[length=2.4mm]},kgpnavy,line width=1.6pt] (2.57,-1.15) -- (1.57,-1.15);
+\node[circle,draw=mdlgrey,fill=white,line width=1pt,minimum size=2.6mm,inner sep=0pt] at (2.72,-1.15) {};
+\node[circle,fill=kgpnavy,minimum size=2.8mm,inner sep=0pt] at (1.39,-1.15) {};
+\node[num,text=mdlgrey,anchor=south] at (2.72,-1.01) {0.491};
+\node[num,text=kgpnavy,anchor=south] at (1.39,-1.01) {0.446};
+\node[num,text=kgpgreen,anchor=north] at (2.06,-1.27) {-9\%};
+\node[circle,draw=mdlgrey,fill=white,line width=1pt,minimum size=2.4mm,inner sep=0pt] at (0.2,1.0) {};
+\node[font=\sffamily\fontsize{7.5}{9}\selectfont,anchor=west] at (0.35,1.0) {before};
+\node[circle,fill=kgpnavy,minimum size=2.4mm,inner sep=0pt] at (1.6,1.0) {};
+\node[font=\sffamily\fontsize{7.5}{9}\selectfont,anchor=west] at (1.75,1.0) {after validation calibration};
+\end{tikzpicture}

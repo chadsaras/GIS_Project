@@ -1,0 +1,72 @@
+% ======================================================================
+%  Pipeline diagram for the "Our Approach" slide (same visual language as AskTheSensors architecture.tex).
+%  grey = inputs / output   blue = learning stages   gold star = our own contribution
+%  In the deck:  \input{figures/pipeline.tex}
+% ======================================================================
+\definecolor{archblue}{HTML}{2F6FD6}
+\definecolor{archbluebg}{HTML}{E3ECFB}
+\definecolor{archgrey}{HTML}{6B7280}
+\definecolor{archgreybg}{HTML}{F3F4F6}
+
+\begin{tikzpicture}[
+  >={Stealth[length=2.4mm,width=2mm]},
+  box/.style={draw, rounded corners=3pt, line width=0.8pt, align=center,
+              font=\sffamily\fontsize{7}{8.4}\selectfont, inner sep=4pt, minimum height=1.45cm},
+  io/.style={box, draw=archgrey, fill=archgreybg, text width=2.7cm, minimum height=1.15cm},
+  stage/.style={box, draw=archblue, fill=archbluebg, text width=3.0cm},
+  flow/.style={->, line width=1pt, draw=kgpink!75},
+  feed/.style={->, line width=0.8pt, draw=archgrey},
+  badge/.style={circle, fill=kgpnavy, text=white, font=\sffamily\bfseries\fontsize{7}{8}\selectfont,
+                inner sep=0pt, minimum size=4.4mm},
+  lab/.style={font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=white, rounded corners=1.5pt,
+              inner xsep=2.5pt, inner ysep=1.2pt},
+  swatch/.style={minimum width=3.2mm, minimum height=2.5mm, inner sep=0pt, rounded corners=1pt, line width=0.7pt},
+  note/.style={font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=west},
+]
+\newcommand{\pbt}[1]{{\fontsize{9}{10.8}\selectfont\bfseries #1}\\[2pt]}
+
+% ------------------------------ learning stages -------------------------------
+\node[stage] (A) {\pbt{Image--text alignment}GSED and caption vectors\\pulled together (contrastive)};
+\node[stage, right=0.75cm of A] (B) {\pbt{Night-light steering}predict each cell's lights;\\keep the 32-number layer};
+\node[stage, right=0.75cm of B] (C) {\pbt{Municipal GDP}add up all cells of a\\municipality, then predict};
+\node[io, right=0.6cm of C, text width=2.1cm, draw=kgpnavy, fill=kgpblue] (Y)
+  {\pbt{log GDP}\textbf{per capita}\\853 municipalities};
+\draw[flow] (A) -- (B); \draw[flow] (B) -- (C); \draw[flow] (C) -- (Y);
+
+% supervision labels under each stage
+\node[lab, fill=kgpgreen, below=3pt of A] {NO LABELS};
+\node[lab, fill=kgpgold, below=3pt of B] {CHEAP PROXY LABEL};
+\node[lab, fill=kgpred, below=3pt of C] {REAL LABEL};
+
+% ----------------------------------- inputs -----------------------------------
+\node[io, left=0.75cm of A] (g) {\pbt{Satellite\\embeddings}64 numbers per\\1\,km cell (GSED)};
+\node[io, above=0.8cm of A, text width=3.3cm] (t) {\pbt{Captions + facts}VLM text, checked against\\land cover, roads, buildings};
+\node[io, above=0.8cm of B] (n) {\pbt{Night lights}VIIRS 2022};
+\node[io, above=0.8cm of C] (y) {\pbt{Official GDP}IBGE 2022};
+\draw[flow] (g) -- (A);
+\draw[feed] (t) -- (A); \draw[feed] (n) -- (B); \draw[feed] (y) -- (C);
+
+% panel: everything retrained per spatial fold
+\begin{scope}[on background layer]
+  \node[draw=kgpnavy!45, fill=kgpblue!45, rounded corners=5pt, line width=0.6pt,
+        inner xsep=8pt, inner ysep=13pt, fit=(A)(B)(C)] (panel) {};
+\end{scope}
+\node[anchor=south east, font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=kgpnavy] at ($(panel.south east)+(-0.12,0.06)$)
+  {all stages retrained per fold};
+
+% badges and stars
+\node[badge] (b1) at (A.north west) {1};
+\node[badge] (b2) at (B.north west) {2};
+\node[badge] (b3) at (C.north west) {3};
+\node[text=kgpgold, anchor=west, inner sep=1pt] at (t.north west) {$\bigstar$};
+\node[text=kgpgold, inner sep=1pt, fill=white, circle] at ($(A.east)!0.5!(B.west)+(0,0.32)$) {$\bigstar$};
+\node[text=kgpgold, anchor=west, inner sep=1pt] at ($(panel.south west)+(0.1,0.12)$) {$\bigstar$};
+
+% ----------------------------------- legend -----------------------------------
+\node[swatch, draw=archgrey, fill=archgreybg, anchor=west] (lg1) at ($(g.west |- panel.south)+(0,-0.42)$) {};
+\node[note] (lt1) at (lg1.east) {input / output};
+\node[swatch, draw=archblue, fill=archbluebg, right=0.5cm of lt1] (lg2) {};
+\node[note] (lt2) at (lg2.east) {learning stage (small networks)};
+\node[text=kgpgold, right=0.5cm of lt2, inner sep=0pt] (lg3) {$\bigstar$};
+\node[note] at (lg3.east) {our contribution: automatic caption checks, combining A with B, spatial testing};
+\end{tikzpicture}
