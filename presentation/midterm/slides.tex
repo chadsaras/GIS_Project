@@ -1,495 +1,490 @@
 %=======================================================================
 %  Satellite embeddings, text and night lights for municipal GDP -- mid-term review
-%  Template: same theme as AskTheSensors (navy / gold, rounded blocks, 4-part footline)
-%  Build on the server:
-%     python presentation/midterm/make_figures.py   (maps, TikZ charts and numbers from the real results)
-%     cd presentation/midterm && latexmk -pdf slides.tex
+%  Design: night-lights slides open and close the talk; content slides are map paper.
+%  One colour per ingredient, everywhere (maps, charts, diagrams):
+%     embeddings = teal   text = violet   night lights = amber   official GDP = brick   POI/roads = blue
+%  The footer is a route line through the talk: Problem, Approach, Data, Test, Results, Next.
+%  Build on the server (XeLaTeX, Lato):
+%     python presentation/midterm/make_figures.py
+%     cd presentation/midterm && latexmk -xelatex slides.tex
 %=======================================================================
-\documentclass[aspectratio=169,9pt]{beamer}
-
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{graphicx}
+\documentclass[aspectratio=169,10pt]{beamer}
+\usefonttheme{professionalfonts}
+\usepackage{fontspec}
+\setsansfont{Lato}
+\newfontfamily\blackfont{Lato Black}
+\newfontfamily\lightfont{Lato Light}
 \usepackage{amsmath,amssymb}
-\usepackage{xcolor}
+\usepackage{booktabs,array,graphicx,xcolor}
 \usepackage[normalem]{ulem}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,decorations.pathreplacing,patterns}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds}
 \graphicspath{{assets/}}
 
-%------------------------- THEME COLOURS -------------------------------
-\definecolor{kgpnavy}{HTML}{1B3A7A}
-\definecolor{kgpnavydark}{HTML}{132B5C}
-\definecolor{kgpblue}{HTML}{E9EEFA}
-\definecolor{kgpgreen}{HTML}{1D6B2E}
-\definecolor{kgpgreenbg}{HTML}{E8F1E8}
-\definecolor{kgpred}{HTML}{8B1A1A}
-\definecolor{kgpredbg}{HTML}{F8ECEC}
-\definecolor{kgpgold}{HTML}{9C8324}
-\definecolor{kgpink}{HTML}{15181D}
-\definecolor{kgpamber}{HTML}{B45309}
-\definecolor{kgpslate}{HTML}{4B5563}
-\definecolor{mdlgrey}{HTML}{6B7280}
-\definecolor{mdlgreybg}{HTML}{E5E7EB}
+%------------------------- palette (same hex as make_figures.py) --------
+\definecolor{night}{HTML}{0B1328}
+\definecolor{night2}{HTML}{16223F}
+\definecolor{glow}{HTML}{F2B134}
+\definecolor{paper}{HTML}{F7F5F0}
+\definecolor{ink}{HTML}{1E2433}
+\definecolor{muted}{HTML}{687082}
+\definecolor{rule}{HTML}{D9D5CC}
+\definecolor{cimg}{HTML}{138A8A}
+\definecolor{ctxt}{HTML}{7057C9}
+\definecolor{cntl}{HTML}{E19A1F}
+\definecolor{cgdp}{HTML}{C4493B}
+\definecolor{cpoi}{HTML}{4A6FA5}
+\definecolor{okc}{HTML}{2E8B57}
+\definecolor{haze}{HTML}{AEB8D0}
 
-\usetheme{default}
-\usecolortheme{default}
+%------------------------- beamer basics --------------------------------
 \setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{blocks}[rounded][shadow=true]
-\addtobeamertemplate{block begin}{\vspace{1.5pt}}{}
-\addtobeamertemplate{block end}{}{\vspace{1.5pt}}
-\addtobeamertemplate{block example begin}{\vspace{1.5pt}}{}
-\addtobeamertemplate{block example end}{}{\vspace{1.5pt}}
-\addtobeamertemplate{block alerted begin}{\vspace{1.5pt}}{}
-\addtobeamertemplate{block alerted end}{}{\vspace{1.5pt}}
-\setbeamercolor{normal text}{fg=kgpink}
-\setbeamerfont{block title}{size=\normalsize,series=\bfseries}
-\setbeamercolor{block title}{bg=kgpnavy,fg=white}
-\setbeamercolor{block body}{bg=kgpblue,fg=kgpink}
-\setbeamercolor{block title example}{bg=kgpgreen,fg=white}
-\setbeamercolor{block body example}{bg=kgpgreenbg,fg=kgpink}
-\setbeamercolor{block title alerted}{bg=kgpred,fg=white}
-\setbeamercolor{block body alerted}{bg=kgpredbg,fg=kgpink}
-\setbeamercolor{itemize item}{fg=kgpnavy}
-\setbeamercolor{itemize subitem}{fg=kgpnavy}
-\setbeamercolor{enumerate item}{fg=kgpnavy}
-\setbeamertemplate{itemize item}{\scriptsize$\bullet$}
-\setbeamertemplate{itemize subitem}{\scriptsize$\circ$}
-
-%------------------------- FRAME TITLE BAR -----------------------------
-\setbeamercolor{frametitle}{bg=kgpnavy,fg=white}
-\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamersize{text margin left=0.6cm,text margin right=0.6cm}
+\setbeamercolor{normal text}{fg=ink}
+\setbeamercolor{structure}{fg=ink}
+\setbeamercolor{alerted text}{fg=cgdp}
+\setbeamerfont{frametitle}{size=\fontsize{15}{18},series=\bfseries}
+\setbeamertemplate{itemize item}{\raisebox{0.25ex}{\color{muted}\rule{0.4em}{0.4em}}}
+\setbeamertemplate{enumerate item}{\color{cntl}\bfseries\insertenumlabel}
+\setbeamertemplate{footline}{\vskip0.78cm}   % room for the footer drawn in the background
 \setbeamertemplate{frametitle}{%
-  \vspace*{0pt}\nointerlineskip%
-  \begin{beamercolorbox}[wd=\paperwidth,sep=0pt,leftskip=0.45cm,rightskip=0.45cm]{frametitle}%
-    \usebeamerfont{frametitle}\vbox to 30pt{\vfil\hbox{\strut\insertframetitle}\vfil}%
-  \end{beamercolorbox}%
-  \vspace{4pt}%
-}
+  \vskip0.36cm%
+  \begin{beamercolorbox}[wd=\paperwidth,leftskip=0.6cm,rightskip=0.6cm]{frametitle}%
+    \usebeamerfont{frametitle}\color{ink}\insertframetitle\par\vskip4pt%
+    {\color{glow}\rule{1.1cm}{2.2pt}}%
+  \end{beamercolorbox}\vskip0.02cm}
+\hyphenpenalty=10000 \exhyphenpenalty=10000
 
-%------------------------- FOOTLINE ------------------------------------
-\setbeamercolor{f1}{bg=kgpnavy,fg=white}
-\setbeamercolor{f2}{bg=kgpnavydark,fg=red!45!white}
-\setbeamercolor{f3}{bg=kgpgold,fg=white}
-\setbeamercolor{f4}{bg=kgpnavy,fg=white}
-\setbeamertemplate{footline}{%
-  \leavevmode%
-  \hbox{%
-  \begin{beamercolorbox}[wd=.30\paperwidth,ht=2.4ex,dp=1.1ex,left,leftskip=.3cm]{f1}%
-    \usebeamerfont{author in head/foot}\scriptsize IIT KGP\ \ (IIT Kharagpur)%
-  \end{beamercolorbox}%
-  \begin{beamercolorbox}[wd=.40\paperwidth,ht=2.4ex,dp=1.1ex,center]{f2}%
-    \usebeamerfont{title in head/foot}\scriptsize Satellite Embeddings for Municipal GDP%
-  \end{beamercolorbox}%
-  \begin{beamercolorbox}[wd=.20\paperwidth,ht=2.4ex,dp=1.1ex,center]{f3}%
-    \usebeamerfont{date in head/foot}\scriptsize October 2026%
-  \end{beamercolorbox}%
-  \begin{beamercolorbox}[wd=.10\paperwidth,ht=2.4ex,dp=1.1ex,center]{f4}%
-    \usebeamerfont{date in head/foot}\scriptsize\insertframenumber\,/\,\inserttotalframenumber%
-  \end{beamercolorbox}}%
-  \vskip0pt%
-}
-
-%------------------------- HELPERS -------------------------------------
-\newcommand{\nov}[1]{{\color{kgpgold}$\bigstar$}\ #1}
-\newcommand{\headline}[1]{\begin{center}\small\color{kgpnavy}\textbf{#1}\end{center}\vspace{-4pt}}
-\newcommand{\source}[1]{{\centering\scriptsize\itshape\color{kgpink!75}#1\par}}
-\newcommand{\stepbadge}[1]{\tikz[baseline=(b.base)]\node[circle,fill=kgpnavy,text=white,
-  font=\bfseries\scriptsize,inner sep=0pt,minimum size=3.8mm](b){#1};}
-\newcommand{\ev}[1]{\mbox{\textbf{\color{kgpgreen}#1}}}
-\newcommand{\lchip}[2]{{\setlength{\fboxsep}{1.6pt}\colorbox{#1}{\tiny\bfseries\color{white}\strut #2}}}
-\newcommand{\ctile}[5][2.35cm]{%
+%------------------------- route line in the footer ---------------------
+\gdef\curstage{0}
+\newcommand{\setstage}[1]{\gdef\curstage{#1}}
+\newcommand{\paperbg}{%
   \begin{tikzpicture}
-    \node[draw=#2, fill=#3, rounded corners=4pt, line width=0.9pt, align=center,
-          text width=#1, minimum height=1.45cm, inner sep=4pt]
-      {{\fontsize{17}{19}\selectfont\bfseries\color{#2}#4}\\[2pt]{\scriptsize\color{kgpink}#5}};
+    \useasboundingbox (0,0) rectangle (\paperwidth,\paperheight);
+    \fill[paper] (0,0) rectangle (\paperwidth,\paperheight);
+    \draw[rule,line width=0.4pt] (0.6cm,0.62cm) -- (\paperwidth-0.6cm,0.62cm);
+    \node[anchor=west,font=\fontsize{6.5}{8}\selectfont,text=muted,inner sep=0] at (0.6cm,0.36cm)
+      {Hemant \ $\cdot$ \ GIS term project \ $\cdot$ \ mid-term review};
+    \node[anchor=east,font=\bfseries\fontsize{7}{8}\selectfont,text=ink,inner sep=0] at (\paperwidth-0.6cm,0.36cm)
+      {\insertframenumber\,/\,\inserttotalframenumber};
+    \ifnum\curstage>0
+      \draw[rule,line width=1.2pt] (\paperwidth-7.9cm,0.36cm) -- (\paperwidth-1.7cm,0.36cm);
+      \ifnum\curstage>1 \draw[ink,line width=1.2pt] (\paperwidth-7.9cm,0.36cm) -- ++({(\curstage-1)*1.24cm},0); \fi
+      \foreach \s [count=\i] in {Problem,Approach,Data,Test,Results,Next} {
+        \coordinate (st) at ({\paperwidth-7.9cm+(\i-1)*1.24cm},0.36cm);
+        \ifnum\i<\curstage
+          \fill[ink] (st) circle (1.6pt);
+          \node[anchor=south,font=\fontsize{5.5}{6}\selectfont,text=ink,inner sep=1.5pt] at (st) {\s};
+        \else\ifnum\i=\curstage
+          \fill[glow] (st) circle (3pt); \fill[ink] (st) circle (1.1pt);
+          \node[anchor=south,font=\bfseries\fontsize{5.5}{6}\selectfont,text=ink,inner sep=3pt] at (st) {\s};
+        \else
+          \filldraw[fill=paper,draw=muted!60,line width=0.6pt] (st) circle (1.6pt);
+          \node[anchor=south,font=\fontsize{5.5}{6}\selectfont,text=muted!80,inner sep=1.5pt] at (st) {\s};
+        \fi\fi
+      }
+    \else\ifnum\curstage<0
+      \node[anchor=east,font=\bfseries\fontsize{6.5}{8}\selectfont,text=muted,inner sep=0] at (\paperwidth-1.7cm,0.36cm) {BACKUP};
+    \fi\fi
   \end{tikzpicture}}
+\setbeamertemplate{background}{\paperbg}
+\newcommand{\nightbg}{%
+  \begin{tikzpicture}
+    \useasboundingbox (0,0) rectangle (\paperwidth,\paperheight);
+    \shade[inner color=night2,outer color=night] (0,0) rectangle (\paperwidth,\paperheight);
+  \end{tikzpicture}}
+
+%------------------------- helpers --------------------------------------
+\newcommand{\muted}[1]{{\color{muted}#1}}
+\newcommand{\dotc}[1]{\tikz[baseline=-0.6ex]\fill[#1] (0,0) circle (2.3pt);}
+\newcommand{\ing}[2]{\dotc{#1}\,{\bfseries\color{#1}#2}}   % ingredient name in its colour
+\newcommand{\chip}[2]{{\setlength{\fboxsep}{1.8pt}\colorbox{#1}{\fontsize{6}{7}\selectfont\bfseries\color{white}\strut #2}}}
+\newcommand{\kpi}[3]{{\blackfont\fontsize{20}{22}\selectfont\color{#1}#2}\\[0pt]{\fontsize{7.5}{9}\selectfont\color{muted}#3}}
+\newcommand{\eyebrow}[2][muted]{{\fontsize{6.5}{8}\selectfont\bfseries\color{#1}\addfontfeatures{LetterSpace=8}\MakeUppercase{#2}}}
+\newcommand{\fnote}[1]{{\fontsize{7}{8.5}\selectfont\color{muted}#1}}
 % caption sentences (assets/caption_example.tex)
-\newcommand{\keep}[1]{\item[{\color{kgpgreen}\checkmark}] #1}
-\newcommand{\dropped}[2]{\item[{\color{kgpred}$\times$}] {\color{mdlgrey}\sout{#1}}\ \lchip{kgpred}{#2}}
-% thumbnails on the data slide, backup tiles
-\newcommand{\thumb}[3]{\begin{minipage}[t]{0.31\linewidth}\centering
-  \includegraphics[height=1.9cm]{#1}\\[1pt]{\scriptsize\bfseries\color{kgpnavy}#2}\\[-1pt]{\tiny\color{mdlgrey}#3}\end{minipage}}
-\newcommand{\btile}[3]{\begin{minipage}[t]{0.235\linewidth}\centering\includegraphics[width=\linewidth]{#1}\\[2pt]
-  {\scriptsize\bfseries\color{kgpnavy}#2}\\[0pt]{\tiny #3}\end{minipage}}
+\newcommand{\keep}[1]{\item[{\color{okc}\checkmark}] #1}
+\newcommand{\dropped}[2]{\item[{\color{cgdp}$\times$}] {\color{muted}\sout{#1}}\ {\fontsize{6}{7}\selectfont\bfseries\color{cgdp}#2}}
+% framed image with a coloured edge
+\newcommand{\framed}[3]{{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{1.2pt}\fcolorbox{#1}{white}{\includegraphics[#2]{#3}}}}
+\newcommand{\btile}[3]{\begin{minipage}[t]{0.235\linewidth}\raggedright\framed{ctxt}{width=\linewidth}{#1}\\[4pt]
+  \eyebrow[ctxt]{#2}\\[1pt]{\fontsize{7}{8.5}\selectfont #3}\end{minipage}}
+% pipeline styles (parameterised styles must live outside frames)
+\tikzset{stage/.style={draw=#1,line width=1.1pt,fill=white,text width=3.25cm,minimum height=1.6cm,align=center,
+           inner sep=5pt,font=\footnotesize},
+         feed/.style={-{Stealth[length=2.2mm]},line width=1pt,draw=#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-\setlength{\leftmargini}{1.25em}
-\setlength{\leftmarginii}{1.05em}
+\setlength{\leftmargini}{1.1em}
 
 \input{assets/numbers.tex}
 \input{assets/backup_captions.tex}
 
-%=======================================================================
 \begin{document}
 
-%----------------------------- 1. TITLE --------------------------------
-{
-\setbeamertemplate{footline}{}
+%======================== 1. TITLE (night) =============================
+{\setbeamertemplate{background}{\nightbg}
 \begin{frame}[plain]
 \begin{tikzpicture}[remember picture,overlay]
-  \fill[kgpnavydark] (current page.south west) rectangle (current page.north east);
-  \fill[kgpnavy,opacity=.55] (current page.south west) rectangle (current page.north east);
-  \node[anchor=east,opacity=0.9,inner sep=0] at ($(current page.east)+(-0.35,0.05)$)
-    {\includegraphics[height=0.78\paperheight]{hero_gsed.png}};
+  \node[anchor=east,inner sep=0] (map) at ($(current page.east)+(1.0,0.1)$)
+    {\includegraphics[height=0.96\paperheight]{hero_ntl.png}};
+  \begin{scope}[x={($(map.south east)-(map.south west)$)},y={($(map.north west)-(map.south west)$)},shift={(map.south west)}]
+    \draw[haze,line width=0.4pt] (0.625,0.345) -- (0.70,0.20) node[anchor=north west,inner sep=1pt,
+      font=\fontsize{6.5}{8}\selectfont,text=haze] {Belo Horizonte};
+    \draw[haze,line width=0.4pt] (0.245,0.465) -- (0.20,0.33) node[anchor=north,inner sep=1pt,
+      font=\fontsize{6.5}{8}\selectfont,text=haze] {Uberlândia};
+  \end{scope}
+  \node[anchor=south east,font=\fontsize{6}{7}\selectfont,text=haze,align=right] at ($(current page.south east)+(-0.4,0.3)$)
+    {VIIRS night lights 2022, one pixel per 1\,km cell};
 \end{tikzpicture}
-\vfill
-\begin{minipage}{0.6\textwidth}
-  {\color{blue!25!white}\small Geographic Information Systems \ $\cdot$ \ Term Project \ $\cdot$ \ Mid-term Review}\\[14pt]
-  {\color{white}\LARGE\bfseries Satellites, Night Lights and Words:}\\[6pt]
-  {\color{white}\large\bfseries Estimating Municipal GDP from}\\[3pt]
-  {\color{white}\large\bfseries Satellite Embeddings}\\[12pt]
-  {\color{kgpgold}\rule{0.62\textwidth}{1.6pt}}\\[12pt]
-  {\color{white}\normalsize\textbf{Hemant}\ \ (22CS30029)}\\[7pt]
-  {\color{blue!25!white}\footnotesize Study area: Minas Gerais, Brazil \ $\cdot$ \ \nMunis{} municipalities \ $\cdot$ \ 1\,km grid}\\[2pt]
-  {\color{blue!25!white}\footnotesize \texttt{github.com/chadsaras/GIS\_Project}}
+\begin{minipage}{0.47\textwidth}\raggedright
+  \eyebrow[glow]{GIS term project \ $\cdot$ \ mid-term review}\\[10pt]
+  {\blackfont\fontsize{24}{27}\selectfont\color{white}Reading the economy from space\par}
+  \vspace{8pt}
+  {\lightfont\fontsize{12}{15}\selectfont\color{white}Estimating municipal GDP from satellite embeddings, text and night lights\par}
+  \vspace{12pt}
+  {\color{glow}\rule{1.6cm}{2.2pt}}\\[10pt]
+  {\fontsize{10}{12}\selectfont\bfseries\color{white}Hemant}\ {\fontsize{9}{11}\selectfont\color{haze}(22CS30029)}\\[4pt]
+  {\fontsize{8}{10}\selectfont\color{haze}Minas Gerais, Brazil \ $\cdot$ \ \nMunis{} municipalities\\October 2026}
 \end{minipage}
-\vfill
-\end{frame}
-}
+\end{frame}}
 
-%----------------------------- 2. PROBLEM ------------------------------
-\begin{frame}{Problem Statement}
+%======================== 2. PROBLEM ===================================
+\setstage{1}
+\begin{frame}{Local GDP is patchy; satellites see every place}
 \begin{columns}[T,onlytextwidth]
-\begin{column}{0.47\textwidth}
-\begin{block}{Why Estimate GDP from Space?}
-\footnotesize
-\begin{itemize}\itemsep2pt
-  \item Sub-national GDP is published \textbf{late}, often \textbf{estimated} from partial data,
-        or \textbf{missing} in countries with weak statistical systems.
-  \item Satellites observe every place, every year, with the same sensor --- an
-        \textbf{independent, consistent} signal of economic activity.
-  \item Inside one Brazilian state, GDP per capita already spans a \textbf{50$\times$} range
-        (map): a hard, realistic test.
+\column{0.5\textwidth}
+\centering\includegraphics[height=5.5cm]{map_gdp.png}
+\column{0.46\textwidth}
+{\blackfont\fontsize{34}{36}\selectfont\color{cgdp}\nGdpRatio$\times$}\\[1pt]
+{\footnotesize gap in GDP per capita inside one state:\\
+\bfseries \nRichName{} \muted{(R\$\,\nRichGdp)} \ vs \ \nPoorName{} \muted{(R\$\,\nPoorGdp)}}\\[8pt]
+\begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
+  \item Sub-national GDP is published \textbf{late}, \textbf{estimated} from partial data, or \textbf{missing} where statistics are weak.
+  \item Satellites measure \textbf{every place, every year, with the same sensor}.
 \end{itemize}
-\end{block}
-\vspace{7pt}
-\begin{exampleblock}{Our Goal}
-\small
-Estimate 2022 GDP per capita for each of the \textbf{\nMunis{} municipalities} of Minas Gerais from
-\textbf{free satellite data} --- and measure \textbf{honestly} how well it works.
-\end{exampleblock}
-\end{column}
-\begin{column}{0.5\textwidth}
+\vspace{8pt}
+\begin{tikzpicture}
+  \node[fill=white,draw=rule,text width=0.88\linewidth,inner sep=6pt,align=left,font=\footnotesize] (g)
+    {\eyebrow[cntl]{Goal}\\[3pt]Estimate GDP per capita for all \textbf{\nMunis{} municipalities} of Minas Gerais from
+     \textbf{free satellite data}, and test it \textbf{honestly}.};
+  \fill[cntl] (g.north west) rectangle ($(g.south west)+(3pt,0)$);
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+%======================== 3. TWO IDEAS =================================
+\begin{frame}{Two recent ideas, never tested together}
 \centering
-\includegraphics[height=5.6cm]{map_gdp.png}\\[-2pt]
-{\scriptsize\color{mdlgrey}Official GDP per capita, 2022 (IBGE)}
-\end{column}
-\end{columns}
+\begin{tikzpicture}[
+  card/.style={fill=white,draw=rule,text width=6.3cm,inner sep=8pt,align=left,font=\small},
+  arr/.style={-{Stealth[length=3mm]},line width=1.3pt}]
+  \node[card] (u) at (0,1.55) {{\bfseries UrbanCLIP} \ \muted{\footnotesize Yan et al., WWW 2024}\\[3pt]
+    A language model writes a \textbf{caption for every satellite tile}; image and text are aligned.\\[4pt]
+    {\footnotesize\color{cgdp}$-$\ GDP gain only +0.5\% R\textsuperscript{2}; random split lets neighbours leak into the test}};
+  \fill[ctxt] (u.north west) rectangle ($(u.south west)+(3pt,0)$);
+  \node[card] (e) at (0,-1.55) {{\bfseries Satellite embeddings} \ \muted{\footnotesize Yue, Zhao \& Hu, 2026}\\[3pt]
+    Google's \textbf{64-number embeddings}, \textbf{steered by night lights} towards economic meaning.\\[4pt]
+    {\footnotesize\color{cgdp}$-$\ countries only; no text, no POI or roads}};
+  \fill[cimg] (e.north west) rectangle ($(e.south west)+(3pt,0)$);
+  \node[fill=ink,text=white,text width=4.5cm,inner sep=10pt,align=left,font=\small] (o) at (8.4,0)
+    {\eyebrow[glow]{This project}\\[5pt]
+     {\large\bfseries Both, in one pipeline}\\[7pt]
+     \ing{cimg}{embeddings} \ \ing{ctxt}{text}\\[2pt]
+     \ing{cntl}{night lights} \ \ing{cpoi}{POI, roads}\\[8pt]
+     {\color{haze}\footnotesize \nMunis{} municipalities \ $\cdot$ \ spatial test\\ablation of every ingredient}};
+  \draw[arr,ctxt] (u.east) to[out=0,in=165] (o.west);
+  \draw[arr,cimg] (e.east) to[out=0,in=195] (o.west);
+\end{tikzpicture}
 \end{frame}
 
-%----------------------------- 3. TWO PAPERS ---------------------------
-\begin{frame}{Building on Two Papers}
-\headline{Two complementary ideas --- never combined, never tested at municipal level}
-\begin{columns}[T,onlytextwidth]
-\begin{column}{0.47\textwidth}
-\begin{block}{UrbanCLIP \ {\normalfont\footnotesize(Yan et al., WWW 2024)}}
-\footnotesize
-A language model writes a \textbf{caption for each satellite tile}; images and captions are
-aligned contrastively.\\[2pt]
-{\color{kgpred}GDP gain only \textbf{+0.5\%} R\textsuperscript{2}; random split leaks neighbours; captions checked by hand.}
-\end{block}
-\vspace{6pt}
-\begin{block}{Satellite Embeddings \ {\normalfont\footnotesize(Yue, Zhao \& Hu, 2026)}}
-\footnotesize
-Google's \textbf{64-number embeddings}, \textbf{steered by night lights} towards economic meaning.\\[2pt]
-{\color{kgpred}Beats night lights for GDP levels --- but only across \textbf{countries}; no text, no POI/roads.}
-\end{block}
-\end{column}
-\begin{column}{0.47\textwidth}
-\begin{alertblock}{Gaps We Address}
-\footnotesize
-\begin{enumerate}\itemsep1.5pt
-  \item The two ideas were \textbf{never combined}: do text and steering help each other?
-  \item Random splits \textbf{overstate} accuracy (near-identical neighbours).
-  \item Hand-checked captions \textbf{do not scale}.
-  \item Country level gives \textbf{few training examples}.
-\end{enumerate}
-\end{alertblock}
-\vspace{6pt}
-\begin{exampleblock}{\nov{This Project}}
-\footnotesize
-Both ideas in \textbf{one pipeline} \ $\cdot$ \ \textbf{\nMunis{} municipalities} \ $\cdot$ \
-\textbf{spatial} cross-validation \ $\cdot$ \ ablations of every ingredient \ $\cdot$ \
-\textbf{automatic} caption checks
-\end{exampleblock}
-\end{column}
-\end{columns}
-\end{frame}
-
-%----------------------------- 4. APPROACH -----------------------------
-\begin{frame}{Our Approach: Three Stages, From No Labels to Official GDP}
-\headline{Supervision gets scarcer and more expensive at each stage}
-\vspace{2pt}
-\makebox[\textwidth][c]{\resizebox{0.93\paperwidth}{!}{\input{figures/pipeline.tex}}}
+%======================== 4. PIPELINE ==================================
+\setstage{2}
+\begin{frame}{Three learning stages, from no labels to official GDP}
+\centering
+\begin{tikzpicture}[
+  thumbcap/.style={font=\fontsize{7}{8.5}\selectfont,align=center,text=ink,inner sep=1pt},
+  flow/.style={-{Stealth[length=2.6mm]},line width=1.4pt,draw=ink}]
+  \node[stage=ctxt] (A) at (0,0) {\eyebrow[ctxt]{Stage A}\\[2pt]{\bfseries\small Image--text alignment}\\[1pt]embeddings and captions pulled together};
+  \node[stage=cntl] (B) at (4.1,0) {\eyebrow[cntl]{Stage B}\\[2pt]{\bfseries\small Night-light steering}\\[1pt]predict each cell's light, keep the inner layer};
+  \node[stage=cgdp] (C) at (8.2,0) {\eyebrow[cgdp]{Stage C}\\[2pt]{\bfseries\small Add up the cells}\\[1pt]per municipality, then predict};
+  \node[fill=ink,text=white,text width=2.3cm,minimum height=1.6cm,align=center,inner sep=5pt,font=\footnotesize] (Y) at (11.95,0)
+    {{\bfseries\small log GDP\\per capita}\\[2pt]{\color{haze}\nMunis{} municipalities}};
+  \draw[flow] (A) -- (B); \draw[flow] (B) -- (C); \draw[flow] (C) -- (Y);
+  % inputs: the real layers
+  \node[inner sep=0] (ti) at (-1.0,2.4) {\framed{cimg}{height=1.2cm}{layer_gsed.png}};
+  \node[inner sep=0] (tc) at (1.0,2.4) {\framed{ctxt}{height=1.2cm}{caption_tile.png}};
+  \node[inner sep=0] (tn) at (4.1,2.4) {\framed{cntl}{height=1.2cm}{layer_ntl.png}};
+  \node[inner sep=0] (tg) at (8.2,2.4) {\framed{cgdp}{height=1.2cm}{layer_gdp.png}};
+  \node[thumbcap,above=1pt of ti] {\bfseries embeddings};
+  \node[thumbcap,above=1pt of tc] {\bfseries captions + facts};
+  \node[thumbcap,above=1pt of tn] {\bfseries night lights};
+  \node[thumbcap,above=1pt of tg] {\bfseries official GDP};
+  \draw[feed=cimg] (ti.south) -- ($(A.north)+(-1.0,0)$);
+  \draw[feed=ctxt] (tc.south) -- ($(A.north)+(1.0,0)$);
+  \draw[feed=cntl] (tn) -- (B);
+  \draw[feed=cgdp] (tg) -- (C);
+  % supervision gets scarcer
+  \foreach \n/\t/\c in {A/no labels/ctxt,B/cheap proxy label/cntl,C/853 real labels/cgdp}
+    \node[below=4pt of \n,font=\bfseries\fontsize{6.5}{8}\selectfont,text=\c] {\MakeUppercase{\t}};
+\end{tikzpicture}
 \vspace{4pt}
-\source{Captions are needed only for training: at prediction time each cell uses its embedding alone.
+
+\fnote{Captions are needed only in training: at prediction time each cell uses its embedding alone.
 Switching stages off gives the ablations (variants V3--V9).}
 \end{frame}
 
-%----------------------------- 5. DATA ---------------------------------
-\begin{frame}{Data: Six Free Layers on One 1\,km Grid}
-\headline{Every layer averaged onto the same 1\,km cells; the GDP target is official statistics, not night lights}
+%======================== 5. DATA ======================================
+\setstage{3}
+\begin{frame}{Six free layers on one 1\,km grid}
 \begin{columns}[c,onlytextwidth]
-\begin{column}{0.64\textwidth}
-\centering
-\thumb{thumb_gsed.png}{Satellite embeddings}{Google GSED, 10\,m $\rightarrow$ 1\,km}\hfill
-\thumb{thumb_ntl.png}{Night lights}{VIIRS 2022}\hfill
-\thumb{thumb_built.png}{Built-up land}{ESA WorldCover}\\[6pt]
-\thumb{thumb_roads.png}{Roads and POIs}{OpenStreetMap}\hfill
-\thumb{thumb_buildings.png}{Building footprints}{Microsoft + OSM}\hfill
-\thumb{thumb_gdp.png}{GDP and population}{IBGE 2022 (target)}
-\end{column}
-\begin{column}{0.34\textwidth}
-\centering
-\ctile[1.95cm]{kgpnavy}{kgpblue}{\nMunis}{municipalities}\hspace{2pt}%
-\ctile[1.95cm]{kgpnavy}{kgpblue}{\nCells}{1\,km cells}\\[5pt]
-\ctile[1.95cm]{kgpgreen}{kgpgreenbg}{10k}{captioned tiles}\hspace{2pt}%
-\ctile[1.95cm]{kgpgold}{kgpgold!10}{\nBuildings}{building footprints}
-\end{column}
-\end{columns}
-\end{frame}
-
-%----------------------------- 6. CAPTIONS (INNOVATION 1) --------------
-\begin{frame}{\nov{Innovation 1: Captions Checked Against the Data}}
-\headline{A vision--language model describes each tile; claims the map data contradicts are removed automatically}
-\begin{columns}[T,onlytextwidth]
-\begin{column}{0.31\textwidth}
-\centering
-{\scriptsize\bfseries\color{kgpnavy}A real tile from our sample}\\[2pt]
-\begin{tikzpicture}
-  \node[inner sep=0] (im) {\includegraphics[width=\linewidth]{caption_tile.png}};
-  \begin{scope}[x={($(im.south east)-(im.south west)$)},y={($(im.north west)-(im.south west)$)},shift={(im.south west)}]
-    \draw[kgpred,line width=1.3pt,dashed] (0.43,0.64) ellipse (0.36 and 0.33);
-    \node[anchor=south west,font=\scriptsize\bfseries,fill=white,fill opacity=0.9,text opacity=1,text=kgpred,inner sep=2pt]
-      at (0.02,0.02) {centre-pivot irrigation, not a mine};
-  \end{scope}
-\end{tikzpicture}\\[1pt]
-{\tiny\color{mdlgrey}Esri World Imagery, \textasciitilde1\,m per pixel}
-\end{column}
-\begin{column}{0.4\textwidth}
-\fcolorbox{kgpnavy!60}{white}{\parbox{0.95\linewidth}{\raggedright
-{\scriptsize\bfseries\color{kgpnavy}Qwen2.5-VL-7B caption, after the checks}
-\begin{itemize}\setlength{\itemsep}{1pt}\scriptsize
-\input{assets/caption_example.tex}
-\end{itemize}}}
-\end{column}
-\begin{column}{0.26\textwidth}
-{\scriptsize\bfseries\color{kgpnavy}What the checks removed}\\[2pt]
-\scriptsize
-\renewcommand{\arraystretch}{1.1}
-\begin{tabular}{@{}l r@{}}
-\toprule
-Reason & Sentences \\
-\midrule
-Filler & \nDropFiller \\
-Industry claim & \nDropIndustry \\
-Building claim & \nDropBuilding \\
-Water claim & \nDropWater \\
-Road claim & \nDropRoad \\
-Farmland claim & \nDropFarm \\
-\midrule
-\textbf{Kept} & \ev{\nKept} \\
-\bottomrule
-\end{tabular}\\[4pt]
-{\tiny\color{mdlgrey}of \nSentences{} sentences in \nCaptions{} captions; image--text matching removes \nClipDropped{} more captions}
-\end{column}
-\end{columns}
-\vspace{4pt}
-\source{Checks use ESA land cover, OSM roads and Microsoft + OSM building footprints. A blind hand audit of 300 captions is in progress.}
-\end{frame}
-
-%----------------------------- 7. EVALUATION (INNOVATION 2) ------------
-\begin{frame}{\nov{Innovation 2: An Honest Test}}
-\headline{Whole regions are held out, so no test municipality has a look-alike neighbour in training}
-\begin{columns}[c,onlytextwidth]
-\begin{column}{0.46\textwidth}
-\centering\includegraphics[height=5.1cm]{map_folds.png}
-\end{column}
-\begin{column}{0.5\textwidth}
-\begin{block}{How We Split}
-\footnotesize
-\begin{enumerate}\itemsep1.5pt
-  \item \textbf{70 official regions} of neighbouring municipalities $\rightarrow$ 5 balanced folds.
-  \item Each round: 3 folds train, 1 validates, \textbf{1 is tested}; \textbf{all stages are retrained}.
-  \item Every municipality is tested \textbf{exactly once}, by a model that never saw its region.
-\end{enumerate}
-\end{block}
-\vspace{3pt}
-\begin{alertblock}{Why It Matters}
-\footnotesize
-UrbanCLIP split tiles \textbf{at random} (60/20/20): near-identical neighbours land in both
-training and test, inflating the scores.
-\end{alertblock}
-\vspace{3pt}
-\begin{exampleblock}{Fair Comparisons}
-\footnotesize
-Same folds for every model; differences tested with a \textbf{block bootstrap} over regions (95\% intervals).
-\end{exampleblock}
-\end{column}
-\end{columns}
-\end{frame}
-
-%----------------------------- 8. RESULTS ------------------------------
-\begin{frame}{Headline Results: The Hybrid Explains Half of GDP Variation}
-\headline{\nMunis{} municipalities \ $\cdot$ \ 5 spatial folds \ $\cdot$ \ every municipality tested once, in a region never seen}
-\begin{columns}[c,onlytextwidth]
-\begin{column}{0.63\textwidth}
-\centering
-\resizebox{\linewidth}{!}{\input{assets/chart_results.tex}}
-\end{column}
-\begin{column}{0.35\textwidth}
-\centering
-\begin{tikzpicture}
-  \node[draw=kgpgold, fill=kgpgold!10, rounded corners=4pt, line width=0.9pt, align=center,
-        text width=0.9\linewidth, inner sep=6pt]
-    {{\fontsize{26}{28}\selectfont\bfseries\color{kgpgold}\nHybridR}\\[3pt]
-     {\footnotesize\bfseries R\textsuperscript{2} of the hybrid model}\\[1pt]
-     {\scriptsize RMSE \nHybridRMSE{} \ $\cdot$ \ night lights alone: R\textsuperscript{2} \nNtlR}};
-\end{tikzpicture}\\[6pt]
-\begin{block}{Research Questions So Far}
-\scriptsize
-\lchip{kgpslate}{RQ1 STEERING}\ \RQone\\[3pt]
-\lchip{kgpgreen}{RQ4 HYBRID}\ \RQfour\\[3pt]
-\lchip{kgpamber}{RQ2--3 TEXT, POI}\ text variants V5--V9 finishing now
-\end{block}
-\end{column}
-\end{columns}
-\vspace{2pt}
-\source{Source: reports/tables/main\_results.csv, rq\_tests.csv. Hybrid = best model blended with the night-light benchmark (weight chosen on validation).}
-\end{frame}
-
-%----------------------------- 9. LESSONS ------------------------------
-\begin{frame}{What We Learned: Calibration Mattered More Than Steering}
-\headline{Fixing over-confident predictions improved error more than any new ingredient}
-\begin{columns}[c,onlytextwidth]
-\begin{column}{0.5\textwidth}
-\centering
-\resizebox{\linewidth}{!}{\input{assets/chart_calibration.tex}}
-\end{column}
-\begin{column}{0.47\textwidth}
-\footnotesize
-\begin{enumerate}\itemsep5pt
-  \item \textbf{Predictions were over-spread.} Rich places came out too rich, poor too poor
-        (slope 0.6). A straight-line correction fitted on \textbf{validation} cut error by \textbf{\textasciitilde20\%}.
-  \item \textbf{Honest re-testing changes conclusions.} Night-light steering looked helpful before
-        the fix; afterwards the gain \textbf{vanished}.
-  \item \textbf{Captions need checking.} On featureless tiles the model invents mines, roads
-        and farmland; the data checks remove most of it.
-\end{enumerate}
-\end{column}
-\end{columns}
-\vspace{6pt}
-\source{Same models and folds before and after; the correction uses validation municipalities only.}
-\end{frame}
-
-%----------------------------- 10. PROGRESS ----------------------------
-\begin{frame}{Progress and Next Steps}
-\headline{About 80\% done --- the text experiments finish this week}
-\begin{columns}[T,onlytextwidth]
-\begin{column}{0.52\textwidth}
-\begin{tikzpicture}[x=4.6cm,y=0.92cm]
-  \foreach \lab/\pct/\fc/\st [count=\i] in {
-      {Data, grid and folds}/1.00/kgpgreen/Done,
-      Captions and cleaning/0.85/kgpamber/Audit left,
-      Models and experiments/0.90/kgpamber/V5--V9 running,
-      Error analysis and maps/0.30/kgpslate/Code ready,
-      Report and slides/0.10/kgpslate/Next} {
-    \node[anchor=west,font=\footnotesize] at (0,-\i+0.24) {\lab};
-    \fill[mdlgreybg,rounded corners=2pt] (0,-\i-0.06) rectangle (1,-\i-0.3);
-    \fill[\fc,rounded corners=2pt] (0,-\i-0.06) rectangle (\pct,-\i-0.3);
-    \node[anchor=west,font=\scriptsize\bfseries,text=\fc] at (1.03,-\i-0.18) {\st};
+\column{0.68\textwidth}
+\begin{tikzpicture}[
+  lname/.style={anchor=west,font=\footnotesize\bfseries,inner sep=0},
+  lsrc/.style={anchor=north west,font=\fontsize{6.5}{8}\selectfont,text=muted,inner sep=0,yshift=-2pt}]
+  \foreach \img/\c/\name/\src [count=\i from 0] in {
+      gsed/cimg/Satellite embeddings/{Google GSED, 64 numbers, 10\,m to 1\,km},
+      captions/ctxt/Captioned tiles/{\nCaptions{} Esri tiles, Qwen2.5-VL},
+      buildings/ink/Buildings/{Microsoft + OSM footprints},
+      roads/cpoi/Roads and POIs/{OpenStreetMap},
+      ntl/cntl/Night lights/{VIIRS 2022},
+      gdp/cgdp/GDP per capita (target)/{IBGE 2022, official}} {
+    \begin{scope}[yshift=\i*0.74cm,cm={1,0.28,-0.62,0.5,(0,0)}]
+      \fill[white,draw=\c,line width=0.8pt] (0,0) rectangle (3.0,2.44);
+      \node[transform shape,anchor=south west,inner sep=0] at (0,0) {\includegraphics[width=3.0cm,height=2.44cm]{layer_\img.png}};
+      \coordinate (r\i) at (3.0,1.22);
+    \end{scope}
+    \draw[\c,line width=0.5pt] (r\i) -- (r\i -| 4.0,0);
+    \fill[\c] (r\i -| 4.0,0) circle (1.5pt);
+    \node[lname,text=\c] (n\i) at ($(r\i -| 4.0,0)+(0.15,0.07)$) {\name};
+    \node[lsrc] at (n\i.south west) {\src};
   }
 \end{tikzpicture}
-\end{column}
-\begin{column}{0.44\textwidth}
-\scriptsize
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{@{}L{0.62\linewidth}l@{}}
-\toprule
-\textbf{Research question} & \textbf{Status} \\
-\midrule
-RQ1 \ Night-light steering & \lchip{kgpgreen}{ANSWERED} \\
-RQ2 \ Text (captions) & \lchip{kgpamber}{RUNNING} \\
-RQ3 \ POIs and roads & \lchip{kgpamber}{RUNNING} \\
-RQ4 \ Hybrid with night lights & \lchip{kgpgreen}{ANSWERED} \\
-RQ5 \ Where it fails & \lchip{kgpslate}{NEXT} \\
-\bottomrule
-\end{tabular}
-\vspace{8pt}
-\begin{exampleblock}{Next}
-\scriptsize
-text results \ $\rightarrow$ \ caption audit \ $\rightarrow$ \ error analysis and 1\,km maps \ $\rightarrow$ \ report
-\end{exampleblock}
-\end{column}
+\column{0.3\textwidth}
+\kpi{ink}{\nMunis}{municipalities}\\[6pt]
+\kpi{ink}{\nCells}{1\,km cells}\\[6pt]
+\kpi{ctxt}{\nCaptions}{captioned tiles}\\[6pt]
+\kpi{ink}{\nBuildings}{building footprints}\\[8pt]
+\fnote{All layers free and aligned on the same grid (EPSG:31983). The target is official statistics, not night lights.}
 \end{columns}
 \end{frame}
 
-%----------------------------- 11. SUMMARY -----------------------------
-\begin{frame}{Summary}
-\vspace{2pt}
-\begin{center}
-{\large\bfseries\color{kgpnavy}Free satellite embeddings, checked captions and night lights,\\[2pt]
-tested honestly on \nMunis{} Brazilian municipalities.\par}
-\end{center}
-\vspace{6pt}
-\begin{center}
-\ctile{kgpgold}{kgpgold!10}{\nHybridR}{R\textsuperscript{2} of the hybrid\\on unseen regions}\hspace{0.28cm}%
-\ctile{kgpnavy}{kgpblue}{\nNtlR}{R\textsuperscript{2} of night\\lights alone}\hspace{0.28cm}%
-\ctile{kgpgreen}{kgpgreenbg}{\nKept}{caption sentences\\kept after checks}\hspace{0.28cm}%
-\ctile{kgpgreen}{kgpgreenbg}{\nCalibGain}{error after\\calibration}
-\end{center}
-\vspace{4pt}
-{\centering\footnotesize\color{kgpred}\textbf{Still open:} whether text and POIs add information (RQ2--3), and where the model fails (RQ5).\par}
-\vspace{8pt}
-{\centering{\Large\bfseries\color{kgpink}Questions?}\\[4pt]
-{\footnotesize\color{kgpink!75}\texttt{github.com/chadsaras/GIS\_Project}}\par}
+%======================== 6. CAPTIONS ==================================
+\begin{frame}{An AI model describes each tile; map data vetoes false claims}
+\begin{columns}[T,onlytextwidth]
+\column{0.29\textwidth}
+\begin{tikzpicture}
+  \node[inner sep=0] (im) {\framed{ctxt}{width=\linewidth}{caption_tile.png}};
+  \begin{scope}[x={($(im.south east)-(im.south west)$)},y={($(im.north west)-(im.south west)$)},shift={(im.south west)}]
+    \draw[cgdp,line width=1.3pt,dashed] (0.43,0.64) ellipse (0.36 and 0.33);
+    \node[anchor=south west,font=\fontsize{6.5}{8}\selectfont\bfseries,fill=white,text=cgdp,inner sep=2pt]
+      at (0.03,0.03) {centre-pivot irrigation, not a mine};
+  \end{scope}
+\end{tikzpicture}\\[2pt]
+\fnote{Esri World Imagery, about 1\,m per pixel}
+\column{0.38\textwidth}
+\eyebrow[ctxt]{Qwen2.5-VL-7B caption, after the checks}\\[-2pt]
+\begin{itemize}\setlength{\itemsep}{1pt}\fontsize{7.5}{9}\selectfont
+\input{assets/caption_example.tex}
+\end{itemize}
+\column{0.29\textwidth}
+\eyebrow{Sentences removed, by rule}\\[5pt]
+\resizebox{\linewidth}{!}{\input{assets/chart_drops.tex}}\\[8pt]
+{\blackfont\fontsize{20}{22}\selectfont\color{okc}\nKept}\ {\footnotesize kept of \nSentences{} sentences}\\[3pt]
+\fnote{Checked against ESA land cover, OSM roads and building footprints; image--text matching removes \nClipDropped{} more captions.
+A blind hand audit is in progress.}
+\end{columns}
 \end{frame}
 
-%----------------------------- BACKUP ----------------------------------
-\begin{frame}{Backup: Data Sources}
-\scriptsize
-\renewcommand{\arraystretch}{1.2}
-\makebox[\textwidth][c]{%
-\begin{tabular}{@{}L{0.2\textwidth}L{0.42\textwidth}L{0.33\textwidth}@{}}
+%======================== 7. TEST ======================================
+\setstage{4}
+\begin{frame}{Every municipality is tested in a region never seen}
+\begin{columns}[c,onlytextwidth]
+\column{0.47\textwidth}
+\centering\includegraphics[height=5.3cm]{map_folds.png}\\[-2pt]
+\fnote{70 official regions (white outlines) grouped into 5 folds}
+\column{0.5\textwidth}
+\begin{tikzpicture}[x=0.62cm,y=0.5cm]
+  \foreach \c [count=\f from 0] in {cimg,cntl,ctxt,cgdp,cpoi} {
+    \fill[\c] (\f+0.12,0.55) rectangle (\f+0.88,0.75);
+    \node[font=\fontsize{6.5}{8}\selectfont,text=muted] at (\f+0.5,1.15) {F\the\numexpr\f+1\relax};
+  }
+  \foreach \r in {0,...,4} {
+    \node[anchor=east,font=\fontsize{7}{8}\selectfont] at (-0.15,-\r) {Round \the\numexpr\r+1\relax};
+    \pgfmathtruncatemacro\v{mod(\r+1,5)}
+    \foreach \f in {0,...,4} {
+      \ifnum\f=\r \def\fc{cgdp}\else\ifnum\f=\v \def\fc{glow}\else\def\fc{rule}\fi\fi
+      \fill[\fc] (\f+0.06,-\r-0.4) rectangle (\f+0.94,-\r+0.4);
+    }
+  }
+  \foreach \c/\t [count=\k from 0] in {rule/train,glow/validate,cgdp/test} {
+    \fill[\c] (\k*2.3,-5.2) rectangle ++(0.45,0.5);
+    \node[anchor=west,font=\fontsize{7}{8}\selectfont] at (\k*2.3+0.55,-4.95) {\t};
+  }
+\end{tikzpicture}\\[8pt]
+\begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
+  \item Whole regions held out: \textbf{no look-alike neighbour} in training. All stages retrained each round.
+  \item UrbanCLIP split tiles \textbf{at random}, so neighbours sat on both sides and scores were inflated.
+\end{itemize}
+\vspace{2pt}
+\fnote{Models are compared on the same folds with a block bootstrap over regions (95\% intervals).}
+\end{columns}
+\end{frame}
+
+%======================== 8. RESULTS ===================================
+\setstage{5}
+\begin{frame}{The hybrid explains about half of GDP variation}
+\begin{columns}[c,onlytextwidth]
+\column{0.62\textwidth}
+\resizebox{\linewidth}{!}{\input{assets/chart_results.tex}}\\[4pt]
+\fnote{Dots: ingredients each model uses. Hybrid = best model blended with night lights (weight chosen on validation).}
+\column{0.34\textwidth}
+{\blackfont\fontsize{30}{32}\selectfont\color{ink}\nHybridR}\\[1pt]
+{\fontsize{7.5}{9}\selectfont\color{muted}R\textsuperscript{2} of the hybrid on unseen regions\\night lights alone: \nNtlR}\\[10pt]
+\chip{muted}{RQ1 \ STEERING}\\[1pt]
+{\footnotesize\bfseries no clear effect}\\[-1pt]\fnote{\RQone}\\[6pt]
+\chip{okc}{RQ4 \ HYBRID}\\[1pt]
+{\footnotesize\bfseries beats the best single model}\\[-1pt]\fnote{\RQfour}\\[6pt]
+\chip{cntl}{RQ2, RQ3 \ TEXT, POI}\\[1pt]
+{\footnotesize\bfseries V5--V9 finishing now}
+\end{columns}
+\end{frame}
+
+%======================== 9. MAPS ======================================
+\begin{frame}{Predictions follow the map, but are pulled towards the middle}
+\begin{columns}[T,onlytextwidth]
+\column{0.28\textwidth}\centering
+\eyebrow[cgdp]{Official}\\[2pt]\includegraphics[width=\linewidth]{map_official.png}
+\column{0.28\textwidth}\centering
+\eyebrow[cgdp]{Predicted (hybrid)}\\[2pt]\includegraphics[width=\linewidth]{map_predicted.png}
+\column{0.28\textwidth}\centering
+\eyebrow{Error}\\[2pt]\includegraphics[width=\linewidth]{map_error.png}
+\column{0.12\textwidth}
+\end{columns}
+\begin{columns}[T,onlytextwidth]
+\column{0.56\textwidth}\centering\includegraphics[width=0.5\linewidth]{cbar_gdp.png}
+\column{0.28\textwidth}\centering\includegraphics[width=0.85\linewidth]{cbar_err.png}
+\column{0.12\textwidth}
+\end{columns}
+\vspace{8pt}
+\begin{columns}[T,onlytextwidth]
+\column{0.24\textwidth}
+{\blackfont\fontsize{20}{22}\selectfont\color{ink}\nWithinHalf}\\{\fontsize{7}{8.5}\selectfont\color{muted}of municipalities predicted within a factor 1.5 of official}
+\column{0.74\textwidth}
+\footnotesize \textcolor{cimg}{\textbf{Under-predicted:}} rich agribusiness and mining towns (west, centre).\\[2pt]
+\textcolor{cgdp}{\textbf{Over-predicted:}} the poorer north-east. \ \muted{Explaining these errors is RQ5, next.}
+\end{columns}
+\end{frame}
+
+%======================== 10. LESSONS ==================================
+\begin{frame}{Calibration mattered more than night-light steering}
+\begin{columns}[c,onlytextwidth]
+\column{0.46\textwidth}
+\centering\resizebox{\linewidth}{!}{\input{assets/chart_calibration.tex}}
+\column{0.5\textwidth}
+\begin{enumerate}\setlength{\itemsep}{9pt}\small
+  \item \textbf{Predictions were over-spread.} A straight-line correction fitted on validation municipalities
+        cut error by {\bfseries\color{okc}\nCalibGain}.
+  \item \textbf{Honest testing changes conclusions.} Steering looked helpful before the fix; after it, the gain vanished.
+  \item \textbf{Captions need checking.} The model invents mines, roads and farmland on plain tiles;
+        the data checks remove most of it.
+\end{enumerate}
+\end{columns}
+\end{frame}
+
+%======================== 11. PROGRESS =================================
+\setstage{6}
+\begin{frame}{About 80\% done: text experiments finish this week}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\begin{tikzpicture}[x=4.6cm,y=0.95cm]
+  \foreach \lab/\pct/\fc/\st [count=\i] in {
+      {Data, grid and folds}/1.00/okc/done,
+      {Captions and cleaning}/0.85/cntl/audit left,
+      {Models and experiments}/0.90/cntl/V5--V9 running,
+      {Error analysis and maps}/0.30/muted/code ready,
+      {Report and slides}/0.10/muted/next} {
+    \node[anchor=west,font=\small] at (0,-\i+0.24) {\lab};
+    \fill[rule,rounded corners=1.5pt] (0,-\i-0.07) rectangle (1,-\i-0.27);
+    \fill[\fc,rounded corners=1.5pt] (0,-\i-0.07) rectangle (\pct,-\i-0.27);
+    \node[anchor=west,font=\bfseries\fontsize{7}{8}\selectfont,text=\fc] at (1.03,-\i-0.17) {\st};
+  }
+\end{tikzpicture}
+\column{0.41\textwidth}
+\eyebrow{Research questions}\\[4pt]
+{\renewcommand{\arraystretch}{1.3}\small
+\begin{tabular}{@{}L{3.6cm}l@{}}
+RQ1 \ night-light steering & \chip{okc}{ANSWERED}\\
+RQ2 \ text (captions) & \chip{cntl}{RUNNING}\\
+RQ3 \ POIs and roads & \chip{cntl}{RUNNING}\\
+RQ4 \ hybrid & \chip{okc}{ANSWERED}\\
+RQ5 \ where it fails & \chip{muted}{NEXT}\\
+\end{tabular}}\\[10pt]
+\eyebrow{Next}\\[3pt]
+{\small text results \ $\rightarrow$ \ caption audit \ $\rightarrow$ \ error maps \ $\rightarrow$ \ report}
+\end{columns}
+\end{frame}
+
+%======================== 12. CLOSING (night) ==========================
+{\setbeamertemplate{background}{\nightbg}
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=east,inner sep=0,opacity=0.55] at ($(current page.east)+(0.3,0)$)
+    {\includegraphics[height=0.9\paperheight]{hero_ntl.png}};
+\end{tikzpicture}
+\begin{minipage}{0.64\textwidth}\raggedright
+\eyebrow[glow]{So far}\\[8pt]
+{\blackfont\fontsize{17}{21}\selectfont\color{white}Free satellite embeddings and night lights, tested honestly, explain half of local GDP.\par}
+\vspace{14pt}
+\begin{tikzpicture}[k/.style={anchor=north west,text width=2.3cm,align=left,inner sep=0}]
+  \node[k] at (0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{glow}\nHybridR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2}, hybrid, unseen regions}};
+  \node[k] at (2.5,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nNtlR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2}, night lights alone}};
+  \node[k] at (5.0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nCalibGain}\\{\fontsize{7}{8.5}\selectfont\color{haze}error after calibration}};
+  \node[k] at (7.5,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nKept}\\{\fontsize{7}{8.5}\selectfont\color{haze}caption sentences kept}};
+\end{tikzpicture}
+\vspace{14pt}
+
+{\footnotesize\color{haze}\textbf{\color{white}Still open:} do text and POIs add information (RQ2--3)? Where does the model fail (RQ5)?}\\[16pt]
+{\blackfont\fontsize{16}{18}\selectfont\color{white}Questions?}\\[3pt]
+{\fontsize{7.5}{9}\selectfont\color{haze}github.com/chadsaras/GIS\_Project}
+\end{minipage}
+\end{frame}}
+
+%======================== BACKUP =======================================
+\setstage{-1}
+\begin{frame}{Data sources}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}L{3.2cm}L{6.0cm}L{5.0cm}@{}}
 \toprule
 \textbf{Layer} & \textbf{Source} & \textbf{Use} \\
 \midrule
-Satellite embeddings & Google Satellite Embedding V1 (AlphaEarth), 2022 & image input, averaged 10\,m $\rightarrow$ 1\,km \\
-Night lights & VIIRS DNB annual V2.2, 2022 & Stage B proxy label; night-light benchmark \\
-Land cover & ESA WorldCover v200, 2021 & masking, fact sentences, caption checks \\
-Roads, POIs & OpenStreetMap (Geofabrik, 2023-01-01) & features, fact sentences, caption checks \\
-Buildings & Microsoft ML footprints + OSM & caption checks \\
-Caption imagery & Esri World Imagery (ArcGIS Location Platform) & input to the vision--language model \\
-GDP, population & IBGE municipal GDP 2022, Census 2022 & target: log GDP per capita \\
+\ing{cimg}{Satellite embeddings} & Google Satellite Embedding V1 (AlphaEarth), 2022 & image input, averaged 10\,m to 1\,km \\
+\ing{cntl}{Night lights} & VIIRS DNB annual V2.2, 2022 & Stage B proxy label, night-light benchmark \\
+\ing{muted}{Land cover} & ESA WorldCover v200, 2021 & masking, fact sentences, caption checks \\
+\ing{cpoi}{Roads, POIs} & OpenStreetMap (Geofabrik, 2023-01-01) & features, fact sentences, caption checks \\
+\ing{ink}{Buildings} & Microsoft ML footprints + OSM & caption checks \\
+\ing{ctxt}{Caption imagery} & Esri World Imagery (ArcGIS Location Platform) & input to the vision--language model \\
+\ing{cgdp}{GDP, population} & IBGE municipal GDP 2022, Census 2022 & target: log GDP per capita \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \end{frame}
 
-\begin{frame}{Backup: Stage A Aligns Embeddings and Captions}
-\headline{For a validation tile, how often is its own caption among the top $k$ of 256 candidates?}
+\begin{frame}{Stage A aligns embeddings and captions far above chance}
 \begin{columns}[c,onlytextwidth]
-\begin{column}{0.5\textwidth}
-\centering\resizebox{0.95\linewidth}{!}{\input{assets/chart_recall.tex}}
-\end{column}
-\begin{column}{0.46\textwidth}
-\footnotesize
-About \textbf{13$\times$ chance} at recall@10. Part of the alignment comes from the fact sentences;
-variants \textbf{V8} (captions only) and \textbf{V9} (facts only) separate the two.
-\end{column}
+\column{0.5\textwidth}\centering\resizebox{0.95\linewidth}{!}{\input{assets/chart_recall.tex}}
+\column{0.46\textwidth}
+\small For a validation tile, how often is its own caption among the top $k$ of 256 candidates?\\[8pt]
+\fnote{Part of the alignment comes from the fact sentences; variants V8 (raw captions) and V9 (facts only) separate the two.}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Backup: What the Captions Look Like}
-\vspace{4pt}
+\begin{frame}{What the captions look like}
 \btile{backup_tile1.png}{\bcapnameA}{\bcapA}\hfill
 \btile{backup_tile2.png}{\bcapnameB}{\bcapB}\hfill
 \btile{backup_tile3.png}{\bcapnameC}{\bcapC}\hfill
 \btile{backup_tile4.png}{\bcapnameD}{\bcapD}\par
-\vspace{6pt}
-\source{First sentence of each caption that passed the checks.}
+\vspace{8pt}
+\fnote{First sentence of each caption that passed the checks.}
 \end{frame}
 
 \end{document}
