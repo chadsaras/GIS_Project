@@ -429,7 +429,7 @@ def main() -> None:
     nums.append(rf"\newcommand{{\nCalibGain}}{{$-${abs(gain):.0f}\%}}")
     tx = pd.read_parquet(data_path(cfg, "processed", "texts.parquet"))
     nums.append(rf"\newcommand{{\nClipDropped}}{{{int((~tx.keep_caption.astype(bool)).sum()):,}}}")
-    for key, q in (("RQone", "RQ1"), ("RQfour", "RQ4")):
+    for key, q in (("RQone", "RQ1"), ("RQtwo", "RQ2"), ("RQthree", "RQ3"), ("RQfour", "RQ4")):
         row = rq[rq.index.str.startswith(q)]
         if len(row):
             rr = row.iloc[0]

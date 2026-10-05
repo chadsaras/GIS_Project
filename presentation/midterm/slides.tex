@@ -332,20 +332,18 @@ A blind hand audit is in progress.}
 
 %======================== 8. RESULTS ===================================
 \setstage{5}
-\begin{frame}{The hybrid explains about half of GDP variation}
+\begin{frame}{Text gives the biggest gain; the hybrid explains half of GDP}
 \begin{columns}[c,onlytextwidth]
 \column{0.62\textwidth}
-\resizebox{\linewidth}{!}{\input{assets/chart_results.tex}}\\[4pt]
-\fnote{Dots: ingredients each model uses. Hybrid = best model blended with night lights (weight chosen on validation).}
+\resizebox{!}{5.2cm}{\input{assets/chart_results.tex}}\\[2pt]
+\fnote{Dots: ingredients each model uses. Hybrid = best model blended with night lights.}
 \column{0.34\textwidth}
-{\blackfont\fontsize{30}{32}\selectfont\color{ink}\nHybridR}\\[1pt]
-{\fontsize{7.5}{9}\selectfont\color{muted}R\textsuperscript{2} of the hybrid on unseen regions\\night lights alone: \nNtlR}\\[10pt]
-\chip{muted}{RQ1 \ STEERING}\\[1pt]
-{\footnotesize\bfseries no clear effect}\\[-1pt]\fnote{\RQone}\\[6pt]
-\chip{okc}{RQ4 \ HYBRID}\\[1pt]
-{\footnotesize\bfseries beats the best single model}\\[-1pt]\fnote{\RQfour}\\[6pt]
-\chip{cntl}{RQ2, RQ3 \ TEXT, POI}\\[1pt]
-{\footnotesize\bfseries V5--V9 finishing now}
+{\blackfont\fontsize{24}{26}\selectfont\color{ink}\nHybridR}\ \ {\fontsize{7.5}{9}\selectfont\color{muted}R\textsuperscript{2}, hybrid, unseen regions}\\[8pt]
+\chip{ctxt}{RQ2 \ TEXT} \ {\footnotesize\bfseries largest gain, borderline}\\[-1pt]\fnote{\RQtwo}\\[5pt]
+\chip{muted}{RQ1 \ STEERING} \ {\footnotesize\bfseries no clear effect}\\[-1pt]\fnote{\RQone}\\[5pt]
+\chip{muted}{RQ3 \ POI, ROADS} \ {\footnotesize\bfseries nothing added}\\[-1pt]\fnote{\RQthree}\\[5pt]
+\chip{cntl}{RQ4 \ HYBRID} \ {\footnotesize\bfseries best, not significant}\\[-1pt]\fnote{\RQfour}\\[5pt]
+\fnote{RMSE differences on log GDP per capita with 95\% block-bootstrap intervals; negative = first model better.}
 \end{columns}
 \end{frame}
 
@@ -393,14 +391,14 @@ A blind hand audit is in progress.}
 
 %======================== 11. PROGRESS =================================
 \setstage{6}
-\begin{frame}{About 80\% done: text experiments finish this week}
+\begin{frame}{About 85\% done: every experiment has finished}
 \begin{columns}[T,onlytextwidth]
 \column{0.55\textwidth}
 \begin{tikzpicture}[x=4.6cm,y=0.95cm]
   \foreach \lab/\pct/\fc/\st [count=\i] in {
       {Data, grid and folds}/1.00/okc/done,
       {Captions and cleaning}/0.85/cntl/audit left,
-      {Models and experiments}/0.90/cntl/V5--V9 running,
+      {Models and experiments}/1.00/okc/done (V1--V12),
       {Error analysis and maps}/0.30/muted/code ready,
       {Report and slides}/0.10/muted/next} {
     \node[anchor=west,font=\small] at (0,-\i+0.24) {\lab};
@@ -414,13 +412,13 @@ A blind hand audit is in progress.}
 {\renewcommand{\arraystretch}{1.3}\small
 \begin{tabular}{@{}L{3.6cm}l@{}}
 RQ1 \ night-light steering & \chip{okc}{ANSWERED}\\
-RQ2 \ text (captions) & \chip{cntl}{RUNNING}\\
-RQ3 \ POIs and roads & \chip{cntl}{RUNNING}\\
+RQ2 \ text (captions) & \chip{okc}{ANSWERED}\\
+RQ3 \ POIs and roads & \chip{okc}{ANSWERED}\\
 RQ4 \ hybrid & \chip{okc}{ANSWERED}\\
 RQ5 \ where it fails & \chip{muted}{NEXT}\\
 \end{tabular}}\\[10pt]
 \eyebrow{Next}\\[3pt]
-{\small text results \ $\rightarrow$ \ caption audit \ $\rightarrow$ \ error maps \ $\rightarrow$ \ report}
+{\small caption audit \ $\rightarrow$ \ error analysis and 1\,km maps (RQ5) \ $\rightarrow$ \ report}
 \end{columns}
 \end{frame}
 
@@ -433,7 +431,7 @@ RQ5 \ where it fails & \chip{muted}{NEXT}\\
 \end{tikzpicture}
 \begin{minipage}{0.64\textwidth}\raggedright
 \eyebrow[glow]{So far}\\[8pt]
-{\blackfont\fontsize{17}{21}\selectfont\color{white}Free satellite embeddings and night lights, tested honestly, explain half of local GDP.\par}
+{\blackfont\fontsize{17}{21}\selectfont\color{white}Satellite embeddings, captions and night lights, tested honestly, explain half of local GDP.\par}
 \vspace{14pt}
 \begin{tikzpicture}[k/.style={anchor=north west,text width=2.3cm,align=left,inner sep=0}]
   \node[k] at (0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{glow}\nHybridR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2}, hybrid, unseen regions}};
@@ -443,7 +441,8 @@ RQ5 \ where it fails & \chip{muted}{NEXT}\\
 \end{tikzpicture}
 \vspace{14pt}
 
-{\footnotesize\color{haze}\textbf{\color{white}Still open:} do text and POIs add information (RQ2--3)? Where does the model fail (RQ5)?}\\[16pt]
+{\footnotesize\color{haze}\textbf{\color{white}So far:} captions give the largest gain, POIs and steering add nothing clear.
+\textbf{\color{white}Next:} where does the model fail (RQ5)?}\\[16pt]
 {\blackfont\fontsize{16}{18}\selectfont\color{white}Questions?}\\[3pt]
 {\fontsize{7.5}{9}\selectfont\color{haze}github.com/chadsaras/GIS\_Project}
 \end{minipage}
