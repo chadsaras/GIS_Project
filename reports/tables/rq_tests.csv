@@ -1,3 +1,5 @@
 question,a,b,rmse_diff_a_minus_b,ci_low,ci_high,verdict
 RQ1 night-light steering,V4,V3,0.0072,-0.0283,0.041,no clear effect
-RQ4 hybrid vs best single,V10,V3,-0.0277,-0.0495,-0.0077,V10 better
+RQ2 text + steering,V6,V4,-0.0248,-0.0495,0.0035,no clear effect
+RQ3 POI/roads on top,V7,V6,-0.0005,-0.0167,0.0162,no clear effect
+RQ4 hybrid vs best single,V10,V8,-0.0095,-0.0347,0.015,no clear effect
