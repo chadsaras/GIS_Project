@@ -447,42 +447,4 @@ RQ5 \ where it fails & \chip{muted}{NEXT}\\
 \end{minipage}
 \end{frame}}
 
-%======================== BACKUP =======================================
-\setstage{-1}
-\begin{frame}{Data sources}
-\footnotesize
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}L{3.2cm}L{6.0cm}L{5.0cm}@{}}
-\toprule
-\textbf{Layer} & \textbf{Source} & \textbf{Use} \\
-\midrule
-\ing{cimg}{Satellite embeddings} & Google Satellite Embedding V1 (AlphaEarth), 2022 & image input, averaged 10\,m to 1\,km \\
-\ing{cntl}{Night lights} & VIIRS DNB annual V2.2, 2022 & Stage B proxy label, night-light benchmark \\
-\ing{muted}{Land cover} & ESA WorldCover v200, 2021 & masking, fact sentences, caption checks \\
-\ing{cpoi}{Roads, POIs} & OpenStreetMap (Geofabrik, 2023-01-01) & features, fact sentences, caption checks \\
-\ing{ink}{Buildings} & Microsoft ML footprints + OSM & caption checks \\
-\ing{ctxt}{Caption imagery} & Esri World Imagery (ArcGIS Location Platform) & input to the vision--language model \\
-\ing{cgdp}{GDP, population} & IBGE municipal GDP 2022, Census 2022 & target: log GDP per capita \\
-\bottomrule
-\end{tabular}
-\end{frame}
-
-\begin{frame}{Stage A aligns embeddings and captions far above chance}
-\begin{columns}[c,onlytextwidth]
-\column{0.5\textwidth}\centering\resizebox{0.95\linewidth}{!}{\input{assets/chart_recall.tex}}
-\column{0.46\textwidth}
-\small For a validation tile, how often is its own caption among the top $k$ of 256 candidates?\\[8pt]
-\fnote{Part of the alignment comes from the fact sentences; variants V8 (raw captions) and V9 (facts only) separate the two.}
-\end{columns}
-\end{frame}
-
-\begin{frame}{What the captions look like}
-\btile{backup_tile1.png}{\bcapnameA}{\bcapA}\hfill
-\btile{backup_tile2.png}{\bcapnameB}{\bcapB}\hfill
-\btile{backup_tile3.png}{\bcapnameC}{\bcapC}\hfill
-\btile{backup_tile4.png}{\bcapnameD}{\bcapD}\par
-\vspace{8pt}
-\fnote{First sentence of each caption that passed the checks.}
-\end{frame}
-
 \end{document}
