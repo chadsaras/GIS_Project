@@ -34,3 +34,13 @@ Thumbs.db
 kaggle*.json
 access_token
 *api_key*
+
+# LaTeX build files
+presentation/**/*.aux
+presentation/**/*.fdb_latexmk
+presentation/**/*.fls
+presentation/**/*.log
+presentation/**/*.nav
+presentation/**/*.out
+presentation/**/*.snm
+presentation/**/*.toc
