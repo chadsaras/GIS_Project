@@ -1,0 +1,15 @@
+model,term,coef,se,p
+V10,Intercept,-0.4635,0.3758,0.2175
+V10,log_gdp_pc,0.0807,0.0352,0.0221
+V10,built_share,0.8358,0.4725,0.0769
+V10,share_services,-0.2854,0.1321,0.0307
+V10,share_industry,0.1847,0.1209,0.1267
+V10,flag_extreme,0.1652,0.0899,0.066
+V10,osm_completeness,-0.0184,0.0815,0.8214
+V1,Intercept,-1.4081,0.3814,0.0002
+V1,log_gdp_pc,0.1896,0.0368,0.0
+V1,built_share,0.7913,0.2496,0.0015
+V1,share_services,-0.3318,0.1226,0.0068
+V1,share_industry,-0.1074,0.1024,0.2942
+V1,flag_extreme,0.2724,0.079,0.0006
+V1,osm_completeness,-0.0987,0.0537,0.0661

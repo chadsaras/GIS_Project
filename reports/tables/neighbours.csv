@@ -1,0 +1,11 @@
+reference,cell_id,space,mean_distance_km,log_ntl_sd,log_ntl_abs_gap
+rural pasture,135720,raw GSED,99.037,0.0,0.0
+rural pasture,135720,Stage B z,269.01,0.096,0.025
+small town,765196,raw GSED,82.111,0.643,0.664
+small town,765196,Stage B z,292.084,0.489,0.459
+industrial area,751464,raw GSED,18.907,0.281,0.218
+industrial area,751464,Stage B z,39.279,0.222,0.218
+mining / bare ground,816715,raw GSED,48.864,0.781,0.902
+mining / bare ground,816715,Stage B z,95.667,0.602,0.502
+Belo Horizonte suburb,752659,raw GSED,8.073,0.219,0.198
+Belo Horizonte suburb,752659,Stage B z,28.369,0.233,0.2

@@ -1,0 +1,5 @@
+measure,n,value,ci_low,ci_high
+share with >= 1 false claim: raw captions,300,0.3467,0.2951,0.4022
+share with >= 1 false claim: cleaned captions (those still used),284,0.2324,0.187,0.2849
+rule-dropped sentences that were false or vague (cleaning precision),288,0.5799,0.5222,0.6354
+false sentences removed by any cleaning pass (cleaning recall),126,0.4127,0.3306,0.5

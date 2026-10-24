@@ -7,7 +7,7 @@
   python scripts/12_build_texts.py --audit-export      300 random raw captions, every sentence once (PLAN 4.10)
       -> interim/audit/audit.html (tile + numbered sentences), audit_labels.csv (fill `label`: correct/false/vague;
          optional `label2` by a second person). Drop decisions are not shown, so labelling is blind to cleaning.
-  python scripts/12_build_texts.py --audit-score       -> reports/tables/caption_audit.csv
+  python scripts/12_build_texts.py --audit-score [--labels audit_labels_claude.csv]   -> reports/tables/caption_audit.csv
       raw vs cleaned false-claim share (Wilson 95% CI), cleaning precision and recall, kappa
 """
 from __future__ import annotations
@@ -123,10 +123,10 @@ def _sentences(cfg) -> pd.DataFrame:
     return s.assign(sent_idx=s.groupby("cell_id").cumcount())
 
 
-def audit_score(cfg) -> None:
+def audit_score(cfg, labels: str = "audit_labels.csv") -> None:
     """PLAN 4.10: share of captions with at least one false claim, raw vs cleaned, plus how well cleaning did."""
     adir = data_path(cfg, "interim", "audit")
-    lab = pd.read_csv(adir / "audit_labels.csv", dtype={"label": str, "label2": str})
+    lab = pd.read_csv(adir / labels, dtype={"label": str, "label2": str})
     assert lab["label"].notna().all(), "some sentences have no label yet"
     assert set(lab["label"]) <= {"correct", "false", "vague"}, f"unexpected labels: {set(lab['label'])}"
     lab = lab.merge(_sentences(cfg)[["cell_id", "sent_idx", "drop_reason"]], on=["cell_id", "sent_idx"])
@@ -164,12 +164,13 @@ def main() -> None:
     ap.add_argument("--clip", action="store_true")
     ap.add_argument("--audit-export", action="store_true")
     ap.add_argument("--audit-score", action="store_true")
+    ap.add_argument("--labels", default="audit_labels.csv", help="label file inside interim/audit for --audit-score")
     args = ap.parse_args()
     cfg = load_config()
     if args.audit_export:
         audit_export(cfg)
     elif args.audit_score:
-        audit_score(cfg)
+        audit_score(cfg, args.labels)
     else:
         assert args.captions, "--captions is required to build texts.parquet"
         build(cfg, data_path(cfg, "raw").parent / args.captions, args.clip)
