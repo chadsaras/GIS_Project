@@ -4,6 +4,52 @@ Newest entry on top. Each entry says what changed since the previous entry, the
 overall status, and where the next person should pick up. Phase numbers follow PLAN.md.
 
 ------------------------------------------------------------------------------
+2026-10-24 (12)  Project complete: audit, error analysis, report, final slides, freeze
+------------------------------------------------------------------------------
+Overall: done, apart from the optional growth extension (Phase 10, dropped) and a human check of the
+caption audit (optional).
+
+Done since entry (11)
+  + Caption audit (PLAN 4.10): all 1,801 sentences of the 300 audit captions labelled correct / false / vague
+    by Claude (LLM) looking at each tile, blind to the cleaning, in a separate file
+    (interim/audit/audit_labels_claude.csv, copy in reports/tables/caption_audit_labels_claude.csv); the hand
+    sheet audit_labels.csv stays blank. 12_build_texts --audit-score --labels picks the file.
+    Raw captions with >= 1 false claim 34.7% [29.5, 40.2] -> 23.2% [18.7, 28.5] after cleaning;
+    cleaning precision 58%, recall 41%. Report it as LLM-labelled; kappa needs a human on label2.
+  + Phase 9 run on real data (13, 14, 15): Stage A recall@10 0.52 (full; chance ~4%), Stage B val R2 0.75-0.78;
+    neighbour check as in the paper; Moran's I of residuals V10 0.16 vs V1 0.33; |error| slope on income 0.08
+    (V10) vs 0.19 (V1); ensemble spread does not track error (rho 0.04); 1 km activity map; word contrast.
+  + top10_gaps.md reasons: 7 of 10 are mining / steel / logistics under-predictions, 3 small public-sector
+    or commuter towns over-predicted.
+  + reports/final_report.tex/.pdf (12 pages), presentation/final/slides.tex/.pdf (16 slides, mid-term design).
+  + scripts/run_all.sh (rerun everything from raw), scripts/18_release.py (release folder ~/GIS/release),
+    01_build_labels reuses cached IBGE tables (the first clean rerun failed on an IBGE API timeout).
+  + Clean rerun from a fresh clone and fresh data folder running in ~/GIS/rerun (logs ~/GIS/rerun/logs);
+    compare its reports/tables/main_results.csv with the frozen one when it finishes.
+
+Decisions
+  - Phase 10 (growth) dropped: needs GSED/VIIRS 2018-2021 and the Earth Engine quota was exhausted; the plan's
+    Gate 4 rule drops it first. Could be run after the quota reset (1 Nov) if wanted.
+
+------------------------------------------------------------------------------
+2026-10-06 (11)  Catch-up: captions, Stage C revision, all variants, mid-term deck
+------------------------------------------------------------------------------
+(Written on 2026-10-24 from the git history; entries were not kept between 2 and 6 Oct.)
+  + Caption imagery: Esri World Imagery via the ArcGIS Location Platform (key in ~/GIS/.esri_api_key, never in
+    git); 10,000 tiles downloaded (11).
+  + Captioning on Kaggle 2x T4 with Qwen2.5-VL-7B (17_kaggle_captions_run.py). Pilot (base_v1, 200 tiles): long
+    captions, 12% truncated, 5.2 s/image -> short_v1 prompt (<= 5 sentences, < 90 words); full run
+    captions_raw_short_v1.jsonl.
+  + Cleaning with Microsoft + OSM building footprints (03b), road and urban checks; RemoteCLIP filter dropped 246
+    captions; 84% of 60,023 sentences kept.
+  + First results V1-V4, V10-V12 (2026-10-03): V3 RMSE 0.555, V4 0.491, RQ1 "V4 better". Validation curves showed
+    over-dispersed Stage C and that sum pooling never won -> validation recalibration, mean pooling, revised grid.
+    After it: V3 0.439, V4 0.446, RQ1 no clear effect. (Chosen on validation, but after seeing the first test
+    results: reported in the report's limitations.)
+  + V5-V9 (text variants) over 5 rounds (~14.5 h per round); main_results.csv and rq_tests.csv final.
+  + Mid-term deck (presentation/midterm) and presenter guide.
+
+------------------------------------------------------------------------------
 2026-10-02 (10)  Code review; Earth Engine restricted mode; review fixes
 ------------------------------------------------------------------------------
 Overall: about 55% (unchanged). Full review of the code against PLAN.md: no leakage found

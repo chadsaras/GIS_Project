@@ -1,0 +1,8 @@
+Results freeze v1.0-results, 2026-10-24T17:52Z
+code commit before freeze: f55bbed
+configs/config.yaml sha256: c0de02ed8cb7ba77ab6ffe4f6ddd5da4e2f661ce27f088d604d5c800bf5ddd6e
+environment.yml sha256:     5836c63247b8c150b32dbf125bec35b19eecf822289a3a6a2babb7e86166cc30
+conda list --export sha256: 898d90fd17efe03766c6493e5854695de1bb239ccffd085c4aa5c1879eaffaca
+python: Python 3.11.16; torch: 2.14.1+cpu
+main_results.csv sha256:    13c0b20b906a9e95562038bbcd7bcfb4d1f461b50aa4411383ffd4de5cc86656
+rq_tests.csv sha256:        e0a3e590041ffe03db6a968647ac1312e9dd913e20397f4aab6cc6d35cc0cee4

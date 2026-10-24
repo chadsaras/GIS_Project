@@ -2,6 +2,12 @@
 
 Oct 1, 2026 · @Hemant · Shared version (with timeline diagram): https://claude.ai/code/artifact/b49dfdb9-db04-450f-917a-b0ed3f79657c
 
+## Status (2026-10-24)
+
+Phases 0-9 and 11 are complete; Phase 10 (optional growth) was dropped. Deliverables: `reports/final_report.pdf`,
+`presentation/final/slides.pdf`, `scripts/run_all.sh` (rerun everything), `scripts/18_release.py` (data release),
+tag `v1.0-results`. Details in progress.txt entry (12).
+
 ## Overview and key decisions
 
 We will estimate 2022 log GDP per capita for the 853 municipalities of Minas Gerais (MG), Brazil, from about 0.5 million 1 km cells. The work runs in 12 phases (0–11) over 12 weeks. Each phase is a numbered list of small steps; every step says what to do, how, and which file it produces.
@@ -255,13 +261,13 @@ Phases overlap wherever their inputs are ready early. If the term starts on a di
 
 **Changes from the proposal, for your approval:**
 
-- [ ] Study area fixed to Minas Gerais (853 municipalities), main year 2022, Census 2022 population.
-- [ ] Spatial blocks = 70 IBGE immediate regions (instead of about 25 generic blocks).
-- [ ] Captions sampled from all folds and filtered per round (the proposal's "training districts only" does not work with rotating folds).
-- [ ] Night lights are left out of fact sentences, to keep the text and steering effects separable.
-- [ ] Stage C gets a log-sum pooling option, chosen on validation, because municipality sizes differ by 10,000×.
-- [ ] Added: block-bootstrap intervals for each RQ, Moran's I of residuals, LightGBM baseline (optional), sector shares in the error analysis.
-- [ ] Layer widths for Stages B and C are our choice; the report will say the embedding paper did not publish them.
+- [x] Study area fixed to Minas Gerais (853 municipalities), main year 2022, Census 2022 population.
+- [x] Spatial blocks = 70 IBGE immediate regions (instead of about 25 generic blocks).
+- [x] Captions sampled from all folds and filtered per round (the proposal's "training districts only" does not work with rotating folds).
+- [x] Night lights are left out of fact sentences, to keep the text and steering effects separable.
+- [x] Stage C gets a log-sum pooling option, chosen on validation, because municipality sizes differ by 10,000×.
+- [x] Added: block-bootstrap intervals for each RQ, Moran's I of residuals, LightGBM baseline (optional), sector shares in the error analysis.
+- [x] Layer widths for Stages B and C are our choice; the report will say the embedding paper did not publish them.
 
 **Changes made during implementation (accepted 2026-10-02; details in progress.txt):**
 
@@ -282,3 +288,7 @@ Phases overlap wherever their inputs are ready early. If the term starts on a di
 | 13 | CLIP cut-off fixed on a seeded 200-caption subset | None |
 | 14 | Caption audit labels each raw sentence once, blind to cleaning; raw and cleaned results derived from the same labels | Half the labelling, unbiased |
 | 15 | 2022 sector shares unavailable, so 2021 shares are used for flags and the error analysis | None on the target |
+| 16 | Captions use the short_v1 prompt (at most 5 sentences, under 90 words) after the pilot showed long, truncated captions | Faster captioning (fits Kaggle limits) |
+| 17 | Stage C revised after the first run: validation recalibration, mean pooling, grid hidden {32,64} x weight decay {1e-4,1e-3,1e-2} x pooling {log-sum, mean} | RQ1 changed from "V4 better" to "no clear effect"; chosen on validation, after first test results (reported) |
+| 18 | Caption audit labelled by an LLM (Claude), not by hand; no second labeller | Reported as such; kappa not available |
+| 19 | Phase 10 growth extension dropped (Earth Engine quota exhausted; Gate 4 rule) | Optional part not done |

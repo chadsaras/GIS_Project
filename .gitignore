@@ -45,3 +45,10 @@ presentation/**/*.out
 presentation/**/*.snm
 presentation/**/*.toc
 *.xdv
+
+# LaTeX build files (report)
+reports/*.aux
+reports/*.fdb_latexmk
+reports/*.fls
+reports/*.log
+reports/*.out
