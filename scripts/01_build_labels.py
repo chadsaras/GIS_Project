@@ -19,6 +19,16 @@ INDUSTRY_SHARE_FLAG = 0.60
 TOP_GDPPC_QUANTILE = 0.99
 
 
+def cached(path, fetch) -> pd.DataFrame:
+    """Read a raw IBGE table if it was downloaded before, else fetch and save it (reruns stay offline and
+    unaffected by later IBGE revisions)."""
+    if path.exists():
+        return pd.read_csv(path)
+    df = fetch()
+    df.to_csv(path, index=False)
+    return df
+
+
 def main() -> None:
     cfg = load_config()
     ensure_dirs(cfg)
@@ -35,22 +45,21 @@ def main() -> None:
     # (used for flags and error analysis only) come from study.sector_year. Values R$ 1,000 -> R$.
     gv = src["sidra_gdp_vars"]
     sector_year = study["sector_year"]
-    gdp_long = ibge.fetch_sidra(src["sidra_gdp_table"], [gv["gdp"]], year, uf)
-    gdp_long.to_csv(data_path(cfg, "raw", "ibge", f"pib_{year}.csv"), index=False)
+    gdp_long = cached(data_path(cfg, "raw", "ibge", f"pib_{year}.csv"),
+                      lambda: ibge.fetch_sidra(src["sidra_gdp_table"], [gv["gdp"]], year, uf))
     va_vars = [v for k, v in gv.items() if k != "gdp"]
-    va_long = ibge.fetch_sidra(src["sidra_gdp_table"], va_vars, sector_year, uf)
-    va_long.to_csv(data_path(cfg, "raw", "ibge", f"va_{sector_year}.csv"), index=False)
+    va_long = cached(data_path(cfg, "raw", "ibge", f"va_{sector_year}.csv"),
+                     lambda: ibge.fetch_sidra(src["sidra_gdp_table"], va_vars, sector_year, uf))
     wide = pd.concat([gdp_long, va_long]).pivot(index="muni_code", columns="variable", values="value")
     gdp = wide.rename(columns={v: k for k, v in gv.items()}) * 1000.0
 
     # 1.3 population (Census 2022)
-    pop_long = ibge.fetch_sidra(src["sidra_pop_table"], [src["sidra_pop_var"]], year, uf)
-    pop_long.to_csv(data_path(cfg, "raw", "ibge", f"pop_{year}.csv"), index=False)
+    pop_long = cached(data_path(cfg, "raw", "ibge", f"pop_{year}.csv"),
+                      lambda: ibge.fetch_sidra(src["sidra_pop_table"], [src["sidra_pop_var"]], year, uf))
     pop = pop_long.set_index("muni_code")["value"].rename("pop")
 
     # 1.4 regions
-    reg = ibge.fetch_municipios(src["ibge_municipios_api"])
-    reg.to_csv(data_path(cfg, "raw", "ibge", "regioes.csv"), index=False)
+    reg = cached(data_path(cfg, "raw", "ibge", "regioes.csv"), lambda: ibge.fetch_municipios(src["ibge_municipios_api"]))
 
     # 1.5 join and derive targets; every table must cover the same municipalities
     n = study["n_municipalities"]
