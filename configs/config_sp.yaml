@@ -1,0 +1,125 @@
+# Transfer test: apply the models trained on Minas Gerais to São Paulo (scripts/21_transfer.py).
+# Same settings as config.yaml except study area, sources, data and report folders. Use with GISECON_CONFIG.
+# Central configuration. Every script reads this file (see src/gisecon/config.py).
+# Paths may use ~ and environment variables; GISECON_DATA_DIR overrides paths.data_dir.
+
+project:
+  name: gisecon
+  seed: 42
+
+paths:
+  data_dir: ~/GIS/data_sp       # transfer data; the MG models are read from ~/GIS/data (transfer.source_data_dir)
+  raw: raw
+  interim: interim
+  processed: processed
+  models: models
+  logs: ~/GIS/logs
+  reports: reports/transfer/SP  # relative to the repo root; keeps the MG figures untouched
+
+study:
+  country: BR
+  state_code: 35                # IBGE code for São Paulo (transfer test; models are trained on MG)
+  state_abbr: SP
+  year: 2022
+  sector_year: 2021             # IBGE municipal value added by sector stops at 2021
+  n_municipalities: 645
+
+grid:
+  crs: EPSG:31983               # SIRGAS 2000 / UTM zone 23S
+  cell_size_m: 1000
+
+gee:
+  project: earth-engineresearch-2026   # Google Cloud project registered for Earth Engine (Step 0.2)
+  gsed: GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL
+  viirs: NOAA/VIIRS/DNB/ANNUAL_V22
+  viirs_band: average_masked
+  worldcover: ESA/WorldCover/v200
+  drive_folder: gisecon_exports
+
+sources:
+  ibge_boundaries_url: https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/UFs/SP/SP_Municipios_2022.zip
+  ibge_municipios_api: https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/municipios   # includes regiao-imediata / intermediaria
+  sidra_gdp_table: 5938
+  sidra_gdp_vars:               # SIDRA variable ids in table 5938 (values in R$ 1,000)
+    gdp: 37
+    va_total: 498
+    va_agro: 513
+    va_industry: 517
+    va_services: 6575           # services excluding public administration
+    va_public: 525              # public administration, defence, education, health, social security
+    taxes: 543
+  sidra_pop_table: 4709         # Censo 2022
+  sidra_pop_var: 93
+  osm_url: https://download.geofabrik.de/south-america/brazil/sudeste-230101.osm.pbf
+
+masking:
+  water_max: 0.90
+  gsed_coverage_min: 0.50
+  empty_natural_min: 0.95       # tree or bare share, only dropped if no built/light/POI/road
+
+cv:
+  n_folds: 5
+  block: regiao_imediata
+  n_assignment_tries: 10000
+
+text:
+  n_sample: 10000
+  per_fold: 2000
+  # Esri World Imagery (PLAN 4.1 decision, 2026-10-02) via the ArcGIS Location Platform imagery source that the
+  # Basemap Styles service uses for "arcgis/imagery" (the static tiles service only has imagery *labels*).
+  # No labels, 256 px tiles, API key from text.tile_key_file (or $ESRI_API_KEY), never committed. Attribution required.
+  tile_url: https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}
+  tile_size: 256
+  tile_zoom: 17                 # ~1.1 m per pixel at MG's latitude
+  tile_key_file: ~/GIS/.esri_api_key
+  tile_attribution: "Esri, Vantor, Earthstar Geographics, and the GIS User Community"
+  tile_px: 768
+  vlm: Qwen/Qwen2.5-VL-7B-Instruct
+  vlm_fallback: Qwen/Qwen2.5-VL-3B-Instruct
+  sentence_model: sentence-transformers/all-mpnet-base-v2
+  clip_model: RemoteCLIP-ViT-B-32
+  clip_drop_share: 0.05
+  audit_n: 300
+
+stage_a:
+  proj_hidden: 256
+  emb_dim: 128
+  dropout: 0.1
+  temperature_init: 0.07
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  batch_size: 256
+  max_epochs: 200
+  patience: 20
+  text_variants: [full, raw, facts]
+
+stage_b:
+  hidden: [128, 64, 32]
+  lr: 1.0e-3
+  batch_size: 1024
+  max_epochs: 30
+  patience: 5
+
+stage_c:
+  cell_hidden: 32
+  cell_out: 16
+  muni_hidden: 16
+  lr: 1.0e-3
+  lr_min: 1.0e-4
+  max_epochs: 3000
+  rolling_window: 100
+  n_seeds: 5
+  grid:                         # revised 2026-10-03 after V3/V4: "sum" never won (median val MSE 2.27 vs 0.33),
+    hidden: [32, 64]            # hidden 32 and dropout 0.1 always won; stronger weight decay and mean pooling added
+    weight_decay: [1.0e-4, 1.0e-3, 1.0e-2]
+    dropout: [0.1]
+    pooling: [logsum, mean]
+
+hybrid:
+  alphas: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+evaluation:
+  bootstrap_reps: 2000
+
+transfer:
+  source_data_dir: ~/GIS/data   # where the Minas Gerais models, caches and predictions live

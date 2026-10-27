@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading the Economy from Space</title>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">GIS term project · Group 2 · live demo</p>
+    <h1>Reading the economy from space</h1>
+    <p class="lead">Free satellite data estimate how rich every town is, with an honest range and a warning when the
+      estimate should not be trusted. All estimates here were made for regions the model never saw.</p>
+    <nav class="steps">
+      <a href="#guess"><span>1</span>Guess the town</a>
+      <a href="#transfer"><span>2</span>A state it has never seen</a>
+      <a href="#blind"><span>3</span>Where satellites are blind</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- 1 ------------------------------------------------------------------ -->
+<section id="guess" class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Step 1 · Minas Gerais, 853 municipalities</p>
+    <h2>Can satellites tell how rich a town is?</h2>
+    <p>Click a town. Its official GDP stays hidden: you see only what satellites say. Then reveal the answer.</p>
+  </div>
+  <div class="grid">
+    <div class="panel map-panel">
+      <div class="toolbar">
+        <div class="seg" id="mg-mode">
+          <button data-mode="est" class="on">Satellite estimate</button>
+          <button data-mode="official">Official</button>
+          <button data-mode="risk">Risk</button>
+        </div>
+        <div class="presets">
+          <span>Try:</span>
+          <button data-code="3162450">Poorest town</button>
+          <button data-code="3106200">Belo Horizonte</button>
+          <button data-code="3115359">A mining town</button>
+        </div>
+      </div>
+      <div id="map-mg" class="map"></div>
+      <div class="legend" id="legend-mg"></div>
+    </div>
+    <div class="panel card" id="card">
+      <p class="muted">Pick a town on the map or use a preset.</p>
+    </div>
+  </div>
+  <div class="score" id="score">
+    <div><b id="s-n">0</b><span>towns revealed</span></div>
+    <div><b id="s-in">–</b><span>official value inside the satellite range</span></div>
+    <div><b id="s-win">–</b><span>satellite closer than night lights alone</span></div>
+  </div>
+</section>
+
+<!-- 2 ------------------------------------------------------------------ -->
+<section id="transfer" class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Step 2 · trained only on Minas Gerais</p>
+    <h2>A state it has never seen</h2>
+    <p>The same models, unchanged, applied to São Paulo, then compared with São Paulo's official numbers.</p>
+  </div>
+  <div id="transfer-body"></div>
+</section>
+
+<!-- 3 ------------------------------------------------------------------ -->
+<section id="blind" class="wrap">
+  <div class="sec-head">
+    <p class="eyebrow">Step 3 · the error analysis, as a feature</p>
+    <h2>Where satellites are blind</h2>
+    <p>Every estimate carries a risk label from satellite signals alone. High-risk towns get a wider range, and that is
+      where mines and steel mills hide: their wealth is not visible from space.</p>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <table class="risk-table">
+        <thead><tr><th>Risk</th><th>Towns</th><th>Typical error</th><th>Mining / hydro towns</th><th>90% range</th><th>Range held</th></tr></thead>
+        <tbody>
+          <tr><td><i class="dot low"></i>Low</td><td>299</td><td>smallest</td><td>2</td><td>×/÷ 1.61</td><td>89.6%</td></tr>
+          <tr><td><i class="dot medium"></i>Medium</td><td>263</td><td>middle</td><td>5</td><td>×/÷ 1.87</td><td>89.7%</td></tr>
+          <tr><td><i class="dot high"></i>High</td><td>291</td><td>largest</td><td>27 of 34</td><td>×/÷ 2.42</td><td>91.1%</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Out-of-sample over 5 spatial folds (reports/tables/app_reliability.md). The warning ranks risk
+        moderately well (AUC 0.66): it flags where not to trust a number; it does not fix it.</p>
+    </div>
+    <div class="panel">
+      <h3>The ten largest misses</h3>
+      <ol class="misses" id="misses"></ol>
+    </div>
+  </div>
+</section>
+
+<section class="wrap fine">
+  <p><b>Honest limits.</b> Tested inside Minas Gerais on regions held out from training; São Paulo is a transfer test
+    against official data. Not validated for other countries or years. Estimates are GDP per person (R$, 2022).</p>
+  <p>Data: Google Satellite Embedding, VIIRS night lights, ESA WorldCover, OpenStreetMap, IBGE.
+    Code: github.com/chadsaras/GIS_Project</p>
+</section>
+</main>
+
+<script src="vendor/leaflet.js"></script>
+<script src="data/data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
