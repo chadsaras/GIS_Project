@@ -196,6 +196,10 @@ function transfer(code) {
       </div>
       <div class="legend" id="legend-t"></div>
       <div class="metrics" id="t-metrics"></div>
+      <p class="note">Switch to <b>Night lights only</b>: the classic method breaks down in a new state, while the
+        satellite model keeps most of its ranking. Accuracy is lower than inside Minas Gerais, so new states need
+        local checking before use. The risk labels do not transfer: almost every São Paulo town looks unusual to a
+        warning learned in Minas Gerais.</p>
     </div>
     <div class="grid" style="margin-top:16px">
       <div class="panel scatter"><p class="eyebrow">Each dot is a municipality · hover to find it on the maps</p><div id="t-scatter"></div></div>
