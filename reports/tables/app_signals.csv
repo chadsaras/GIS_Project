@@ -1,0 +1,7 @@
+signal,spearman_abs_err,p,auc_top20_error
+bare_share,0.1168,0.0006,
+built_share,0.0071,0.8363,
+ntl_top_share,-0.0119,0.7279,
+log_n_cells,-0.0842,0.0139,
+pred,0.2056,0.0,
+"risk score (cross-fitted, all signals)",0.185,0.0,0.6566
