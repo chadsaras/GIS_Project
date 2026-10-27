@@ -1,0 +1,27 @@
+space,k,seed,r2_income_pc,r2_population
+Stage C V7 pooled,6,0,0.0834,0.4615
+Stage C V7 pooled,8,0,0.126,0.5095
+"Stage C V7 pooled, size removed",6,0,0.054,0.0347
+"Stage C V7 pooled, size removed",8,0,0.1241,0.0262
+Stage C V7 pooled,6,1,0.0324,0.4199
+Stage C V7 pooled,8,1,0.1008,0.5254
+"Stage C V7 pooled, size removed",6,1,0.0373,0.0099
+"Stage C V7 pooled, size removed",8,1,0.1442,0.032
+Stage C V7 pooled,6,2,0.0746,0.5214
+Stage C V7 pooled,8,2,0.1014,0.5763
+"Stage C V7 pooled, size removed",6,2,0.0831,0.0069
+"Stage C V7 pooled, size removed",8,2,0.1324,0.0246
+Stage C V7 pooled,6,3,0.0324,0.4251
+Stage C V7 pooled,8,3,0.0833,0.5276
+"Stage C V7 pooled, size removed",6,3,0.058,0.0178
+"Stage C V7 pooled, size removed",8,3,0.1305,0.0337
+Stage C V7 pooled,6,4,0.034,0.4368
+Stage C V7 pooled,8,4,0.1048,0.5367
+"Stage C V7 pooled, size removed",6,4,0.0926,0.029
+"Stage C V7 pooled, size removed",8,4,0.1544,0.04
+raw GSED mean,6,-,0.2331,-0.0495
+raw GSED mean,8,-,0.2875,-0.0302
+land cover + lights,6,-,0.1668,0.1711
+land cover + lights,8,-,0.2315,0.1898
+population only,6,-,0.0736,0.9362
+population only,8,-,0.0698,0.9649
