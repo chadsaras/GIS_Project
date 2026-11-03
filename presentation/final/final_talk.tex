@@ -566,22 +566,8 @@ real night lights (R\textsuperscript{2} \nSpAct).}
 \end{columns}
 \end{frame}
 
-%======================== 17. WHAT DID NOT WORK =======================
+%======================== 16. ANSWERS AND LIMITS ======================
 \setstage{7}\setphase{0}
-\begin{frame}{What did not work, and what it taught us}
-\centering
-{\renewcommand{\arraystretch}{1.5}\footnotesize
-\begin{tabular}{@{}L{3.3cm}L{5.4cm}L{5.1cm}@{}}
-\eyebrow{We tried} & \eyebrow{What happened} & \eyebrow[cntl]{Lesson}\\[-3pt]
-\ing{cntl}{Night-light steering} & Works at cell level (neighbour check) but adds no GDP information & Light is already in the embeddings; calibration mattered more\\
-\ing{ctxt}{Text alignment} & Small gain, shrank in the rerun (\nRerunTextFrozen{} $\to$ \nRerunTextNew) & Frozen embeddings limit what text can add\\
-\ing{cpoi}{POIs and roads} & Nothing on top of text & The fact sentences already carry them\\
-\ing{muted}{Seed spread as uncertainty} & Does not track the error ($\rho$ = \nUncRho) & Seeds of one model are not a confidence interval\\
-\end{tabular}}\par\vspace{6pt}
-\fnote{All checks out-of-sample; details in the report and reports/tables.}
-\end{frame}
-
-%======================== 18. ANSWERS AND LIMITS ======================
 \begin{frame}{Answers to the five questions, and the limits}
 \begin{columns}[T,onlytextwidth]
 \column{0.53\textwidth}
