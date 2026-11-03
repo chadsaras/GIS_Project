@@ -57,7 +57,7 @@ website). Same design as the mid-term deck. A chip in the top-right corner marks
 | 12 | Errors | new | Errors grow with income, half as fast as night lights | LOWESS, slopes, Moran's I, seeds |
 | 13 | Embeddings | new | Each stage did its job, yet steering does not reach GDP | stage diagnostics, neighbour check |
 | 14 | Embeddings | new | The text space speaks the state's economic geography | word contrast, nearest captions |
-| 15 | Embeddings | new | Learned town vectors carry size, not wealth | twins, clusters |
+| – | – | – | (removed: town-vector twins and clusters) | – |
 | 16 | Transfer | new | Trained in Minas Gerais, it still works in São Paulo | SP maps, R² bars |
 | 17 | Wrap-up | – | What did not work, and what it taught us | lessons table |
 | 18 | Wrap-up | – | Answers to the five questions, and the limits | RQ chips, limits |

@@ -327,7 +327,7 @@ What did each part \textbf{learn}? Does it work \textbf{elsewhere}?}\\[4pt]
 3 & Where does it fail? (RQ5) & Maps, ten largest misses, reasons & Mines, steel mills, commuter towns\\
 4 & Why does it fail? (RQ5) & Error regression, LOWESS, Moran's I, seeds & Errors rise with income, half as fast as night lights\\
 5 & Did each stage do its job? & Stage A/B diagnostics, neighbour check & Yes, but steering does not reach GDP\\
-6 & What did the model learn? & Text explanations; town-vector twins and clusters & Text reads geography; vectors carry size, not wealth\\
+6 & What did the text learn? & Nearest captions, rich-vs-poor word contrast & Text reads the state's economic geography\\
 7 & Does it work elsewhere? & São Paulo, models applied unchanged & Satellites R\textsuperscript{2} \nSpR, night lights \nSpNtlR\\
 \end{tabular}}\par\vspace{8pt}
 \fnote{Also since the mid-term: a 12-page report, results frozen (tag v1.0-results), a one-command rerun script and a data release.}
@@ -540,42 +540,7 @@ Yet it adds nothing to GDP (RQ1).}
 \end{columns}
 \end{frame}
 
-%======================== 15. STAGE C VECTORS ==========================
-\begin{frame}{Learned town vectors carry economy size, not wealth}
-\begin{columns}[T,onlytextwidth]
-\column{0.5\textwidth}
-\eyebrow{Twins: 10 most similar training towns}\\[4pt]
-{\renewcommand{\arraystretch}{1.25}\footnotesize
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Space & R\textsuperscript{2} income/person & R\textsuperscript{2} population\\
-\midrule
-Raw satellite vectors & 0.31 & 0.06\\
-Population only & 0.00 & 0.99\\
-Stage C, as trained & 0.22--0.33 & 0.74--0.81\\
-Stage C, size removed & 0.28--0.41 & 0.19--0.47\\
-\textit{The GDP model itself} & \textit{0.46--0.52} & \\
-\bottomrule
-\end{tabular}}\\[4pt]
-\fnote{Twin estimate = mean official value of a held-out town's 10 nearest training towns.}
-\column{0.46\textwidth}
-\eyebrow{Clusters: k-means, held-out towns}\\[4pt]
-{\renewcommand{\arraystretch}{1.25}\footnotesize
-\begin{tabular}{@{}lc@{}}
-\toprule
-Grouping by & R\textsuperscript{2} income/person\\
-\midrule
-Stage C vectors & 0.05--0.14\\
-Land cover + lights & 0.17--0.23\\
-Raw satellite vectors & 0.23--0.29\\
-\bottomrule
-\end{tabular}}\\[6pt]
-{\footnotesize \textbf{Why:} Stage C predicts total GDP and subtracts population only at the end, so its vectors encode size.
-They are also unstable across trained models (adjusted Rand 0.45 vs 0.90 for raw vectors).}
-\end{columns}
-\end{frame}
-
-%======================== 16. TRANSFER: SAO PAULO ======================
+%======================== 15. TRANSFER: SAO PAULO ======================
 \setstage{6}
 \begin{frame}{Trained in Minas Gerais, it still works in São Paulo}
 \begin{columns}[T,onlytextwidth]
@@ -611,7 +576,6 @@ real night lights (R\textsuperscript{2} \nSpAct).}
 \ing{cntl}{Night-light steering} & Works at cell level (neighbour check) but adds no GDP information & Light is already in the embeddings; calibration mattered more\\
 \ing{ctxt}{Text alignment} & Small gain, shrank in the rerun (\nRerunTextFrozen{} $\to$ \nRerunTextNew) & Frozen embeddings limit what text can add\\
 \ing{cpoi}{POIs and roads} & Nothing on top of text & The fact sentences already carry them\\
-\ing{cgdp}{Town vectors as an ``economic space''} & Twins match size, not wealth; clusters explain \nClusterPc & Use the model's estimates, not vector distances\\
 \ing{muted}{Seed spread as uncertainty} & Does not track the error ($\rho$ = \nUncRho) & Seeds of one model are not a confidence interval\\
 \end{tabular}}\par\vspace{6pt}
 \fnote{All checks out-of-sample; details in the report and reports/tables.}
