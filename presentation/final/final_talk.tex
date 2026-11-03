@@ -225,12 +225,12 @@ steered embedding. Stage C: per-cell network, log-sum pooling, 5-seed ensemble. 
 %======================== 4. RECAP: DATA AND CAPTIONS ==================
 \begin{frame}{Recap: six free layers and 10,000 AI captions}
 \begin{columns}[c,onlytextwidth]
-\column{0.6\textwidth}
+\column{0.62\textwidth}
 \begin{tikzpicture}[
   lname/.style={anchor=west,font=\footnotesize\bfseries,inner sep=0},
   lsrc/.style={anchor=north west,font=\fontsize{6.5}{8}\selectfont,text=muted,inner sep=0,yshift=-2pt}]
   \foreach \img/\c/\name/\src [count=\i from 0] in {
-      gsed/cimg/Satellite embeddings/{Google GSED, 64 numbers, 10\,m to 1\,km},
+      gsed/cimg/Satellite embeddings/{Google GSED, 64 numbers per cell},
       captions/ctxt/Captioned tiles/{\nCaptions{} Esri tiles, Qwen2.5-VL},
       buildings/ink/Buildings/{Microsoft + OSM footprints},
       roads/cpoi/Roads and POIs/{OpenStreetMap},
@@ -247,15 +247,15 @@ steered embedding. Stage C: per-cell network, log-sum pooling, 5-seed ensemble. 
     \node[lsrc] at (n\i.south west) {\src};
   }
 \end{tikzpicture}
-\column{0.37\textwidth}
+\column{0.35\textwidth}
 \kpi{ink}{\nCells}{kept 1\,km cells, \nMunis{} municipalities}\\[6pt]
 \eyebrow[ctxt]{Text, per sampled cell}\\[2pt]
 \begin{itemize}\setlength{\itemsep}{2pt}\fontsize{7.5}{9}\selectfont
-  \item \textbf{Caption} by Qwen2.5-VL-7B (Kaggle, short prompt after a 200-tile pilot)
-  \item \textbf{Fact sentences} from the data: land cover, POIs, roads (no night lights)
-  \item \textbf{Cleaning}: filler and claims contradicted by map data removed; RemoteCLIP drops \nClipDropped{} captions
+  \item \textbf{Caption} by Qwen2.5-VL-7B (short prompt after a 200-tile pilot)
+  \item \textbf{Fact sentences} from the data: land cover, POIs, roads
+  \item \textbf{Cleaning}: filler and claims that contradict map data removed
 \end{itemize}
-\vspace{2pt}
+\vspace{6pt}
 \kpi{okc}{\nKept}{of \nSentences{} caption sentences kept}
 \end{columns}
 \end{frame}
