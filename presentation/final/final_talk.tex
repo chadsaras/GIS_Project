@@ -452,7 +452,7 @@ the tiles show forest and pasture. Reasons are candidates from sector shares.}
 \kpi{ink}{\nSlopeV{} \ {\fontsize{12}{14}\selectfont\color{muted}vs} \ \nSlopeNtl}{extra error per log point of income, hybrid vs night lights}\\[8pt]
 \kpi{ink}{\nMoranV{} \ {\fontsize{12}{14}\selectfont\color{muted}vs} \ \nMoranNtl}{Moran's I of errors: still clustered in space, half as much}\\[8pt]
 \kpi{cgdp}{$\rho = \nUncRho$}{spread across the 5 training seeds does not predict the error}\\[8pt]
-\fnote{Error regression with region-clustered SEs (backup B2): errors rise with income and built-up share, fall with
+\fnote{Error regression with region-clustered SEs: errors rise with income and built-up share, fall with
 services share; OSM completeness does not matter.}
 \end{columns}
 \end{frame}
@@ -606,53 +606,5 @@ RQ5 \ where it fails & \chip{cgdp}{MINES, STEEL, COMMUTER TOWNS}\\
 {\fontsize{7.5}{9}\selectfont\color{haze}github.com/chadsaras/GIS\_Project}
 \end{minipage}
 \end{frame}}
-
-%======================== B1. TWO IDEAS ================================
-\setstage{-1}\setphase{1}
-\begin{frame}{Backup: two recent ideas, never tested together}
-\centering
-\begin{tikzpicture}[
-  card/.style={fill=white,draw=rule,text width=6.3cm,inner sep=8pt,align=left,font=\small},
-  arr/.style={-{Stealth[length=3mm]},line width=1.3pt}]
-  \node[card] (u) at (0,1.55) {{\bfseries UrbanCLIP} \ \muted{\footnotesize Yan et al., WWW 2024}\\[3pt]
-    A language model writes a \textbf{caption for every satellite tile}; image and text are aligned.\\[4pt]
-    {\footnotesize\color{cgdp}$-$\ GDP gain only +0.5\% R\textsuperscript{2}; random split lets neighbours leak into the test}};
-  \fill[ctxt] (u.north west) rectangle ($(u.south west)+(3pt,0)$);
-  \node[card] (e) at (0,-1.55) {{\bfseries Satellite embeddings} \ \muted{\footnotesize Yue, Zhao \& Hu, 2026}\\[3pt]
-    Google's \textbf{64-number embeddings}, \textbf{steered by night lights} towards economic meaning.\\[4pt]
-    {\footnotesize\color{cgdp}$-$\ countries only; no text, no POI or roads}};
-  \fill[cimg] (e.north west) rectangle ($(e.south west)+(3pt,0)$);
-  \node[fill=ink,text=white,text width=4.5cm,inner sep=10pt,align=left,font=\small] (o) at (8.4,0)
-    {\eyebrow[glow]{This project}\\[5pt]
-     {\large\bfseries Both, in one pipeline}\\[7pt]
-     \ing{cimg}{embeddings} \ \ing{ctxt}{text}\\[2pt]
-     \ing{cntl}{night lights} \ \ing{cpoi}{POI, roads}\\[8pt]
-     {\color{haze}\footnotesize \nMunis{} municipalities \ $\cdot$ \ spatial test\\ablation of every ingredient}};
-  \draw[arr,ctxt] (u.east) to[out=0,in=165] (o.west);
-  \draw[arr,cimg] (e.east) to[out=0,in=195] (o.west);
-\end{tikzpicture}
-\end{frame}
-
-%======================== B2. ERROR REGRESSION =========================
-\setphase{2}
-\begin{frame}{Backup: what predicts a large error?}
-\centering
-{\renewcommand{\arraystretch}{1.25}\footnotesize
-\begin{tabular}{@{}lcccc@{}}
-\toprule
- & \multicolumn{2}{c}{Hybrid (V10)} & \multicolumn{2}{c}{Night lights (V1)}\\
-Municipality trait & coef. (SE) & $p$ & coef. (SE) & $p$\\
-\midrule
-official log GDP per capita & 0.081 (0.035) & 0.02 & 0.190 (0.037) & $<$0.001\\
-built-up share & 0.836 (0.473) & 0.08 & 0.791 (0.250) & 0.002\\
-services share of the economy & $-$0.285 (0.132) & 0.03 & $-$0.332 (0.123) & 0.007\\
-industry share of the economy & 0.185 (0.121) & 0.13 & $-$0.107 (0.102) & 0.29\\
-flagged (mining, hydro, top 1\%) & 0.165 (0.090) & 0.07 & 0.272 (0.079) & $<$0.001\\
-OSM completeness & $-$0.018 (0.082) & 0.82 & $-$0.099 (0.054) & 0.07\\
-\bottomrule
-\end{tabular}}\par\vspace{8pt}
-\fnote{OLS of absolute error, 853 municipalities, standard errors clustered by immediate region. Sector shares from 2021.
-IBGE publishes no data-quality score per municipality, so income and economic structure are used instead.}
-\end{frame}
 
 \end{document}
