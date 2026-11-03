@@ -495,8 +495,8 @@ Yet it adds nothing to GDP (RQ1).}
 \eyebrow[ctxt]{Nearest training captions to a town}\\[2pt]
 {\footnotesize \textbf{Belo Horizonte} (official 10.82, predicted 10.91): dense grids of red-tiled roofs.\\
 \textbf{São João das Missões}, the poorest (8.99 vs 9.08): sparse settlements in dry scrub.\\
-\textbf{Conceição do Mato Dentro}, a mine (11.94 vs 10.46): forest and pasture, so the mine stays invisible.}\\[6pt]
-\fnote{Word contrast: log-odds with informative Dirichlet prior (Monroe et al., 2008). Values: log GDP per capita.}
+\textbf{Conceição do Mato Dentro}, a mine (11.94 vs 10.46): forest and pasture, so the mine stays invisible.}\\[3pt]
+\fnote{Log-odds with informative Dirichlet prior (Monroe et al., 2008). Values: log GDP per capita.}
 \end{columns}
 \end{frame}
 
@@ -504,25 +504,37 @@ Yet it adds nothing to GDP (RQ1).}
 \setstage{6}
 \begin{frame}{Trained in Minas Gerais, it still works in São Paulo}
 \begin{columns}[T,onlytextwidth]
-\column{0.32\textwidth}\centering
+\column{0.245\textwidth}\centering
 \eyebrow[cgdp]{Official, IBGE 2022}\\[2pt]\includegraphics[width=\linewidth]{sp_official.png}
-\column{0.32\textwidth}\centering
-\eyebrow[cimg]{Predicted, never trained on SP}\\[2pt]\includegraphics[width=\linewidth]{sp_predicted.png}\\[4pt]
-\hspace*{-1.05\linewidth}\includegraphics[width=0.95\linewidth]{cbar_gdp.png}
-\column{0.32\textwidth}
-\eyebrow{R\textsuperscript{2} against official GDP}\\[6pt]
-\begin{tikzpicture}[x=4.4cm,y=0.78cm]
+\column{0.245\textwidth}\centering
+\eyebrow[cimg]{Predicted}\\[2pt]\includegraphics[width=\linewidth]{sp_predicted.png}
+\column{0.245\textwidth}\centering
+\eyebrow{Error}\\[2pt]\includegraphics[width=\linewidth]{sp_error.png}
+\column{0.235\textwidth}
+\eyebrow{R\textsuperscript{2} against official}\\[4pt]
+\begin{tikzpicture}[x=3.3cm,y=0.62cm]
   \draw[rule] (0,0.1) -- (0,-4.1);
   \foreach \v/\lab/\c [count=\i] in {0.52/{Satellites, Minas Gerais}/cimg,0.33/{Satellites, São Paulo}/cimg,
                                      0.27/{Night lights, Minas Gerais}/cntl,-0.06/{Night lights, São Paulo}/cntl} {
-    \node[anchor=south west,font=\fontsize{6.5}{8}\selectfont,inner sep=1pt] at (0,-\i+0.42) {\lab};
+    \node[anchor=south west,font=\fontsize{6}{7}\selectfont,inner sep=1pt] at (0,-\i+0.42) {\lab};
     \fill[\c] (0,-\i+0.4) rectangle (\v,-\i+0.1);
-    \node[anchor=west,font=\bfseries\fontsize{7.5}{9}\selectfont] at ({max(\v,0)+0.02},-\i+0.25) {\v};
+    \node[anchor=west,font=\bfseries\fontsize{7}{8}\selectfont] at ({max(\v,0)+0.02},-\i+0.25) {\v};
   }
-\end{tikzpicture}\\[4pt]
-\fnote{\nSpMunis{} municipalities, all models and scalers from Minas Gerais, nothing refitted. Rank agreement
-\textbf{\nSpRho} (night lights \nSpNtlRho); \nSpWithin{} within a factor 1.5. Predicted activity matches SP's
-real night lights (R\textsuperscript{2} \nSpAct).}
+\end{tikzpicture}
+\end{columns}
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}\centering\includegraphics[width=0.55\linewidth]{cbar_gdp.png}
+\column{0.245\textwidth}\centering\includegraphics[width=0.85\linewidth]{cbar_err.png}
+\column{0.235\textwidth}
+\end{columns}
+\vspace{4pt}
+\begin{columns}[T,onlytextwidth]
+\column{0.24\textwidth}
+{\blackfont\fontsize{20}{22}\selectfont\color{ink}\nSpWithin}\\{\fontsize{7}{8.5}\selectfont\color{muted}within a factor 1.5 of official}
+\column{0.74\textwidth}
+\fontsize{7.5}{9}\selectfont \nSpMunis{} municipalities, models from Minas Gerais unchanged; rank agreement \textbf{\nSpRho} (night lights \nSpNtlRho).\\[2pt]
+\textcolor{cimg}{\textbf{Under-predicted:}} oil and industry towns (Ilhabela, Paulínia), metro business hubs (Osasco, Barueri).
+\textcolor{cgdp}{\textbf{Over-predicted:}} poorer coastal and rural towns.
 \end{columns}
 \end{frame}
 

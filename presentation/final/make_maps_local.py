@@ -15,12 +15,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PolyCollection
-from matplotlib.colors import LinearSegmentedColormap, LogNorm
+from matplotlib.colors import LinearSegmentedColormap, LogNorm, TwoSlopeNorm
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "presentation" / "final" / "assets"
 CMAP_GDP = LinearSegmentedColormap.from_list("gdp", ["#FBF1DD", "#F2B134", "#D9632E", "#8E2C3A", "#3B1530"])
 GDP_NORM = (8000, 120000)
+CMAP_ERR = LinearSegmentedColormap.from_list("err", ["#138A8A", "#9FD0CC", "#F4F1EA", "#EBA493", "#C4493B"])
 
 
 def rings(geom):
@@ -34,7 +35,11 @@ def main() -> None:
     sp = data["states"]["SP"]
     rows = {r["code"]: r for r in sp["rows"]}
     lat0 = np.deg2rad(-22.3)  # equirectangular with the state's mean latitude: close to the UTM look
-    for key, name in (("official", "sp_official"), ("est", "sp_predicted")):
+    # error = predicted - official in log GDP per capita, same colours and scale as the Minas Gerais error map
+    layers = (("sp_official", lambda r: r["official"], CMAP_GDP, LogNorm(*GDP_NORM)),
+              ("sp_predicted", lambda r: r["est"], CMAP_GDP, LogNorm(*GDP_NORM)),
+              ("sp_error", lambda r: np.log(r["est"] / r["official"]), CMAP_ERR, TwoSlopeNorm(0, -1, 1)))
+    for name, value, cmap, norm in layers:
         verts, vals = [], []
         for f in sp["shapes"]["features"]:
             r = rows.get(f["properties"]["muni_code"])
@@ -42,17 +47,17 @@ def main() -> None:
                 continue
             for ring in rings(f["geometry"]):
                 verts.append(np.c_[ring[:, 0] * np.cos(lat0), ring[:, 1]])
-                vals.append(r[key])
+                vals.append(value(r))
         fig, ax = plt.subplots(figsize=(4.6, 3.0))
-        pc = PolyCollection(verts, array=np.array(vals, float), cmap=CMAP_GDP, norm=LogNorm(*GDP_NORM),
-                            edgecolors="white", linewidths=0.08)
+        pc = PolyCollection(verts, array=np.clip(np.array(vals, float), -1, 1) if name == "sp_error" else np.array(vals, float),
+                            cmap=cmap, norm=norm, edgecolors="white", linewidths=0.08)
         ax.add_collection(pc)
         ax.autoscale_view()
         ax.set_aspect("equal")
         ax.set_axis_off()
         fig.savefig(OUT / f"{name}.png", dpi=220, bbox_inches="tight", pad_inches=0.02, transparent=True)
         plt.close(fig)
-    print(f"wrote {OUT}/sp_official.png, sp_predicted.png ({len(rows)} municipalities)")
+    print(f"wrote {OUT}/sp_official.png, sp_predicted.png, sp_error.png ({len(rows)} municipalities)")
 
 
 if __name__ == "__main__":
