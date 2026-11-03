@@ -1,16 +1,18 @@
 %=======================================================================
 %  Satellite embeddings, text and night lights for municipal GDP -- final presentation
-%  Same design as the mid-term deck (presentation/midterm), whose assets it reuses; new figures come from
-%  reports/figures. The footer route line: Problem, Approach, Data, Test, Results, Failures, Wrap-up.
-%  Build on the server (XeLaTeX, Lato):
+%  Plan and storyline: PRESENTATION_PLAN.md. Same design as the mid-term deck (presentation/midterm), whose
+%  assets it reuses; new figures come from reports/figures and assets/ (make_figures.py or make_maps_local.py,
+%  website screenshots). Footer route line: Problem, Approach, Test, Results, Failures, Application, Wrap-up.
+%  Build (XeLaTeX, Lato; uses the system font or MiKTeX's Lato files):
 %     cd presentation/final && latexmk -xelatex slides.tex
 %=======================================================================
 \documentclass[aspectratio=169,10pt]{beamer}
 \usefonttheme{professionalfonts}
 \usepackage{fontspec}
-\setsansfont{Lato}
-\newfontfamily\blackfont{Lato Black}
-\newfontfamily\lightfont{Lato Light}
+\IfFontExistsTF{Lato}{%
+  \setsansfont{Lato}\newfontfamily\blackfont{Lato Black}\newfontfamily\lightfont{Lato Light}}{%
+  \setsansfont{Lato-Regular.ttf}[BoldFont=Lato-Bold.ttf,ItalicFont=Lato-Italic.ttf,BoldItalicFont=Lato-BoldItalic.ttf]
+  \newfontfamily\blackfont{Lato-Black.ttf}\newfontfamily\lightfont{Lato-Light.ttf}}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs,array,graphicx,xcolor}
 \usepackage[normalem]{ulem}
@@ -65,10 +67,10 @@
     \node[anchor=east,font=\bfseries\fontsize{7}{8}\selectfont,text=ink,inner sep=0] at (\paperwidth-0.6cm,0.36cm)
       {\insertframenumber\,/\,\inserttotalframenumber};
     \ifnum\curstage>0
-      \draw[rule,line width=1.2pt] (\paperwidth-8.9cm,0.36cm) -- (\paperwidth-1.7cm,0.36cm);
-      \ifnum\curstage>1 \draw[ink,line width=1.2pt] (\paperwidth-8.9cm,0.36cm) -- ++({(\curstage-1)*1.2cm},0); \fi
-      \foreach \s [count=\i] in {Problem,Approach,Data,Test,Results,Failures,Wrap-up} {
-        \coordinate (st) at ({\paperwidth-8.9cm+(\i-1)*1.2cm},0.36cm);
+      \draw[rule,line width=1.2pt] (\paperwidth-9.2cm,0.36cm) -- (\paperwidth-1.7cm,0.36cm);
+      \ifnum\curstage>1 \draw[ink,line width=1.2pt] (\paperwidth-9.2cm,0.36cm) -- ++({(\curstage-1)*1.25cm},0); \fi
+      \foreach \s [count=\i] in {Problem,Approach,Test,Results,Failures,Application,Wrap-up} {
+        \coordinate (st) at ({\paperwidth-9.2cm+(\i-1)*1.25cm},0.36cm);
         \ifnum\i<\curstage
           \fill[ink] (st) circle (1.6pt);
           \node[anchor=south,font=\fontsize{5.5}{6}\selectfont,text=ink,inner sep=1.5pt] at (st) {\s};
@@ -99,13 +101,11 @@
 \newcommand{\kpi}[3]{{\blackfont\fontsize{20}{22}\selectfont\color{#1}#2}\\[0pt]{\fontsize{7.5}{9}\selectfont\color{muted}#3}}
 \newcommand{\eyebrow}[2][muted]{{\fontsize{6.5}{8}\selectfont\bfseries\color{#1}\addfontfeatures{LetterSpace=8}\MakeUppercase{#2}}}
 \newcommand{\fnote}[1]{{\fontsize{7}{8.5}\selectfont\color{muted}#1}}
-% caption sentences (assets/caption_example.tex)
+% caption sentences (../midterm/assets/caption_example.tex)
 \newcommand{\keep}[1]{\item[{\color{okc}\checkmark}] #1}
 \newcommand{\dropped}[2]{\item[{\color{cgdp}$\times$}] {\color{muted}\sout{#1}}\ {\fontsize{6}{7}\selectfont\bfseries\color{cgdp}#2}}
 % framed image with a coloured edge
 \newcommand{\framed}[3]{{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{1.2pt}\fcolorbox{#1}{white}{\includegraphics[#2]{#3}}}}
-\newcommand{\btile}[3]{\begin{minipage}[t]{0.235\linewidth}\raggedright\framed{ctxt}{width=\linewidth}{#1}\\[4pt]
-  \eyebrow[ctxt]{#2}\\[1pt]{\fontsize{7}{8.5}\selectfont #3}\end{minipage}}
 % pipeline styles (parameterised styles must live outside frames)
 \tikzset{stage/.style={draw=#1,line width=1.1pt,fill=white,text width=3.25cm,minimum height=1.6cm,align=center,
            inner sep=5pt,font=\footnotesize},
@@ -139,7 +139,7 @@
   \vspace{8pt}
   {\blackfont\fontsize{21}{24}\selectfont\color{white}Reading the economy from space\par}
   \vspace{4pt}
-  {\lightfont\fontsize{11}{14}\selectfont\color{white}Estimating municipal GDP from satellite embeddings, text and night lights\par}
+  {\lightfont\fontsize{11}{14}\selectfont\color{white}Estimating municipal GDP from satellite embeddings, text and night lights, and putting it to use\par}
   \vspace{8pt}
   {\color{glow}\rule{1.6cm}{2.2pt}}\\[7pt]
   {\fontsize{10}{12}\selectfont\bfseries\color{white}Group 2}\\[4pt]
@@ -170,13 +170,30 @@
 \begin{tikzpicture}
   \node[fill=white,draw=rule,text width=0.88\linewidth,inner sep=6pt,align=left,font=\footnotesize] (g)
     {\eyebrow[cntl]{Goal}\\[3pt]Estimate GDP per capita for all \textbf{\nMunis{} municipalities} of Minas Gerais from
-     \textbf{free satellite data}, and test it \textbf{honestly}.};
+     \textbf{free satellite data}, test it \textbf{honestly}, and turn it into a \textbf{usable tool}.};
   \fill[cntl] (g.north west) rectangle ($(g.south west)+(3pt,0)$);
 \end{tikzpicture}
 \end{columns}
 \end{frame}
 
-%======================== 3. TWO IDEAS =================================
+%======================== 3. SINCE THE MID-TERM ========================
+\begin{frame}{Since the mid-term: from first results to a tested application}
+\centering
+{\renewcommand{\arraystretch}{1.3}\footnotesize
+\begin{tabular}{@{}L{4.6cm}@{\hspace{6pt}}c@{\hspace{6pt}}L{6.6cm}@{}}
+\eyebrow{At the mid-term (6 Oct)} & & \eyebrow[okc]{Final (November)}\\[-2pt]
+\chip{muted}{DONE} \ Models V1--V12, RQ1--RQ4 answered & {\color{glow}$\rightarrow$} & \chip{okc}{NEW} \ \textbf{Same answers after a full rerun} from scratch\\
+\chip{muted}{RUNNING} \ Caption audit & {\color{glow}$\rightarrow$} & \chip{okc}{DONE} \ \textbf{\nAuditRaw{} of AI captions} hold a false claim; checks cut it to \nAuditClean\\
+\chip{muted}{CODE READY} \ Error analysis (RQ5) & {\color{glow}$\rightarrow$} & \chip{okc}{DONE} \ \textbf{Mines, steel mills, commuter towns} are invisible from space\\
+\chip{muted}{MISSING} \ Uncertainty & {\color{glow}$\rightarrow$} & \chip{okc}{NEW} \ \textbf{Honest 90\% ranges} (\nCovNinety{} held) and a risk warning\\
+\chip{muted}{MISSING} \ Test outside the study area & {\color{glow}$\rightarrow$} & \chip{okc}{NEW} \ \textbf{São Paulo transfer}: satellites travel, night lights do not\\
+\chip{muted}{MISSING} \ Application & {\color{glow}$\rightarrow$} & \chip{okc}{NEW} \ \textbf{Web application}: estimates where statistics are missing\\
+\end{tabular}}\par\vspace{10pt}
+\fnote{Also: a 12-page report, a one-command rerun of the whole pipeline, and checks of ideas that did not work (slide 16).}
+\end{frame}
+
+%======================== 4. TWO IDEAS =================================
+\setstage{2}
 \begin{frame}{Two recent ideas, never tested together}
 \centering
 \begin{tikzpicture}[
@@ -201,8 +218,7 @@
 \end{tikzpicture}
 \end{frame}
 
-%======================== 4. PIPELINE ==================================
-\setstage{2}
+%======================== 5. PIPELINE ==================================
 \begin{frame}{Three learning stages, from no labels to official GDP}
 \centering
 \begin{tikzpicture}[
@@ -214,7 +230,6 @@
   \node[fill=ink,text=white,text width=2.3cm,minimum height=1.6cm,align=center,inner sep=5pt,font=\footnotesize] (Y) at (11.95,0)
     {{\bfseries\small log GDP\\per capita}\\[2pt]{\color{haze}\nMunis{} municipalities}};
   \draw[flow] (A) -- (B); \draw[flow] (B) -- (C); \draw[flow] (C) -- (Y);
-  % inputs: the real layers
   \node[inner sep=0] (ti) at (-1.0,2.4) {\framed{cimg}{height=1.2cm}{layer_gsed.png}};
   \node[inner sep=0] (tc) at (1.0,2.4) {\framed{ctxt}{height=1.2cm}{caption_tile.png}};
   \node[inner sep=0] (tn) at (4.1,2.4) {\framed{cntl}{height=1.2cm}{layer_ntl.png}};
@@ -227,17 +242,15 @@
   \draw[feed=ctxt] (tc.south) -- ($(A.north)+(1.0,0)$);
   \draw[feed=cntl] (tn) -- (B);
   \draw[feed=cgdp] (tg) -- (C);
-  % supervision gets scarcer
   \foreach \n/\t/\c in {A/no labels/ctxt,B/cheap proxy label/cntl,C/853 real labels/cgdp}
     \node[below=4pt of \n,font=\bfseries\fontsize{6.5}{8}\selectfont,text=\c] {\MakeUppercase{\t}};
 \end{tikzpicture}
 \vspace{4pt}
 
-\fnote{Captions are needed only in training: at prediction time each cell uses its embedding alone.}
+\fnote{Captions are needed only in training: at prediction time each cell uses its embedding alone, so any place can be estimated.}
 \end{frame}
 
-%======================== 5. DATA ======================================
-\setstage{3}
+%======================== 6. DATA ======================================
 \begin{frame}{Six free layers on one 1\,km grid}
 \begin{columns}[c,onlytextwidth]
 \column{0.68\textwidth}
@@ -271,34 +284,46 @@
 \end{columns}
 \end{frame}
 
-%======================== 6. CAPTIONS ==================================
-\begin{frame}{An AI model describes each tile; map data vetoes false claims}
+%======================== 7. CAPTIONS + AUDIT ==========================
+\begin{frame}{AI captions help, but a third of them contain a false claim}
 \begin{columns}[T,onlytextwidth]
-\column{0.29\textwidth}
+\column{0.25\textwidth}
 \begin{tikzpicture}
   \node[inner sep=0] (im) {\framed{ctxt}{width=\linewidth}{caption_tile.png}};
   \begin{scope}[x={($(im.south east)-(im.south west)$)},y={($(im.north west)-(im.south west)$)},shift={(im.south west)}]
     \draw[cgdp,line width=1.3pt,dashed] (0.43,0.64) ellipse (0.36 and 0.33);
-    \node[anchor=south west,font=\fontsize{6.5}{8}\selectfont\bfseries,fill=white,text=cgdp,inner sep=2pt]
+    \node[anchor=south west,font=\fontsize{6}{7}\selectfont\bfseries,fill=white,text=cgdp,inner sep=2pt,text width=0.86\linewidth]
       at (0.03,0.03) {centre-pivot irrigation, not a mine};
   \end{scope}
 \end{tikzpicture}\\[2pt]
 \fnote{Esri World Imagery, about 1\,m per pixel}
-\column{0.38\textwidth}
+\column{0.37\textwidth}
 \eyebrow[ctxt]{Qwen2.5-VL-7B caption, after the checks}\\[-2pt]
-\begin{itemize}\setlength{\itemsep}{1pt}\fontsize{7.5}{9}\selectfont
+\begin{itemize}\setlength{\itemsep}{1pt}\fontsize{7.2}{8.6}\selectfont
 \input{../midterm/assets/caption_example.tex}
 \end{itemize}
-\column{0.29\textwidth}
-\eyebrow{Sentences removed, by rule}\\[5pt]
-\resizebox{\linewidth}{!}{\input{../midterm/assets/chart_drops.tex}}\\[8pt]
-{\blackfont\fontsize{20}{22}\selectfont\color{okc}\nKept}\ {\footnotesize kept of \nSentences{} sentences}\\[3pt]
-\fnote{Checked against ESA land cover, OSM roads and building footprints; image--text matching removes \nClipDropped{} more captions.}
+\fnote{Checks against land cover, roads and building footprints keep \nKept{} of \nSentences{} sentences.}
+\column{0.34\textwidth}
+\eyebrow{Blind audit of 300 captions}\\[6pt]
+\begin{tikzpicture}[x=0.058cm,y=1cm]
+  \foreach \v/\lo/\hi/\lab/\c [count=\i] in {34.7/29.5/40.2/raw/cgdp,23.2/18.7/28.5/cleaned/okc} {
+    \node[anchor=east,font=\footnotesize] at (-1.5,-\i*0.9) {\lab};
+    \fill[\c] (0,-\i*0.9-0.22) rectangle (\v,-\i*0.9+0.22);
+    \draw[ink,line width=0.7pt] (\lo,-\i*0.9) -- (\hi,-\i*0.9);
+    \draw[ink,line width=0.7pt] (\lo,-\i*0.9-0.08) -- ++(0,0.16); \draw[ink,line width=0.7pt] (\hi,-\i*0.9-0.08) -- ++(0,0.16);
+    \node[anchor=west,font=\bfseries\footnotesize] at (\hi+1.5,-\i*0.9) {\v\%};
+  }
+  \draw[rule] (0,-0.4) -- (0,-2.2);
+  \node[font=\fontsize{6.5}{8}\selectfont,text=muted,anchor=north west,text width=4.3cm] at (0,-2.2)
+    {captions with $\geq$1 false claim, 95\% interval};
+\end{tikzpicture}\\[4pt]
+{\fontsize{7.5}{9}\selectfont Cleaning removes \textbf{\nAuditRecall} of false sentences; \textbf{\nAuditPrecision} of what it removes is false or vague.}\\[3pt]
+\fnote{Labelled by an LLM (Claude) from each tile; a human check is still open.}
 \end{columns}
 \end{frame}
 
-%======================== 7. TEST ======================================
-\setstage{4}
+%======================== 8. TEST ======================================
+\setstage{3}
 \begin{frame}{Every municipality is tested in a region never seen}
 \begin{columns}[c,onlytextwidth]
 \column{0.47\textwidth}
@@ -325,31 +350,32 @@
 \end{tikzpicture}\\[8pt]
 \begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
   \item Whole regions held out: \textbf{no look-alike neighbour} in training. All stages retrained each round.
-  \item UrbanCLIP split tiles \textbf{at random}, so neighbours sat on both sides and scores were inflated.
+  \item The same rule holds for every range, warning and choice shown later: \textbf{nothing is tuned on test towns}.
 \end{itemize}
 \vspace{2pt}
 \fnote{Models are compared on the same folds with a block bootstrap over regions (95\% intervals).}
 \end{columns}
 \end{frame}
 
-%======================== 8. RESULTS ===================================
-\setstage{5}
-\begin{frame}{Text gives the biggest gain; the hybrid explains half of GDP}
+%======================== 9. RESULTS ===================================
+\setstage{4}
+\begin{frame}{Satellites explain half of GDP gaps, twice night lights}
 \begin{columns}[c,onlytextwidth]
 \column{0.62\textwidth}
 \resizebox{!}{5.2cm}{\input{../midterm/assets/chart_results.tex}}\\[2pt]
 \fnote{Dots: ingredients each model uses. Hybrid = best model blended with night lights.}
 \column{0.34\textwidth}
-{\blackfont\fontsize{24}{26}\selectfont\color{ink}\nHybridR}\ \ {\fontsize{7.5}{9}\selectfont\color{muted}R\textsuperscript{2}, hybrid, unseen regions}\\[8pt]
-\chip{ctxt}{RQ2 \ TEXT} \ {\footnotesize\bfseries largest gain, borderline}\\[-1pt]\fnote{\RQtwo}\\[5pt]
+{\blackfont\fontsize{24}{26}\selectfont\color{ink}\nHybridR}\ \ {\fontsize{7.5}{9}\selectfont\color{muted}R\textsuperscript{2}, hybrid, unseen regions}\\[2pt]
+\chip{okc}{CONFIRMED BY A FULL RERUN}\\[7pt]
+\chip{ctxt}{RQ2 \ TEXT} \ {\footnotesize\bfseries small gain, not robust}\\[-1pt]\fnote{$\Delta$RMSE \nRerunTextFrozen, rerun \nRerunTextNew; intervals include 0}\\[5pt]
 \chip{muted}{RQ1 \ STEERING} \ {\footnotesize\bfseries no clear effect}\\[-1pt]\fnote{\RQone}\\[5pt]
 \chip{muted}{RQ3 \ POI, ROADS} \ {\footnotesize\bfseries nothing added}\\[-1pt]\fnote{\RQthree}\\[5pt]
-\chip{cntl}{RQ4 \ HYBRID} \ {\footnotesize\bfseries best, not significant}\\[-1pt]\fnote{\RQfour}\\[5pt]
-\fnote{RMSE differences on log GDP per capita with 95\% block-bootstrap intervals; negative = first model better.}
+\chip{cntl}{RQ4 \ HYBRID} \ {\footnotesize\bfseries best, not significant}\\[-1pt]\fnote{\RQfour}\\[4pt]
+\fnote{RMSE differences (log GDP per capita), 95\% intervals; negative = first model better.}
 \end{columns}
 \end{frame}
 
-%======================== 9. MAPS ======================================
+%======================== 10. MAPS =====================================
 \begin{frame}{Predictions follow the map, but are pulled towards the middle}
 \begin{columns}[T,onlytextwidth]
 \column{0.28\textwidth}\centering
@@ -375,8 +401,8 @@
 \end{columns}
 \end{frame}
 
-%======================== 10. RQ5: THE BIG MISSES =======================
-\setstage{6}
+%======================== 11. RQ5: THE BIG MISSES =======================
+\setstage{5}
 \begin{frame}{The biggest misses are mines and steel mills satellites cannot see}
 \begin{columns}[c,onlytextwidth]
 \column{0.5\textwidth}
@@ -405,7 +431,7 @@ Chiador & $+1.29$ & {\color{cgdp}\bfseries public-sector town} \\
 \end{columns}
 \end{frame}
 
-%======================== 11. RQ5: ERROR STRUCTURE =====================
+%======================== 12. RQ5: ERROR STRUCTURE =====================
 \begin{frame}{Errors grow with income, but half as fast as with night lights}
 \begin{columns}[c,onlytextwidth]
 \column{0.5\textwidth}
@@ -414,46 +440,164 @@ Chiador & $+1.29$ & {\color{cgdp}\bfseries public-sector town} \\
 \column{0.46\textwidth}
 \kpi{ink}{\nSlopeV{} \ {\fontsize{12}{14}\selectfont\color{muted}vs} \ \nSlopeNtl}{extra error per log point of income, hybrid vs night lights}\\[8pt]
 \kpi{ink}{\nMoranV{} \ {\fontsize{12}{14}\selectfont\color{muted}vs} \ \nMoranNtl}{Moran's I of errors: still clustered, half as much}\\[8pt]
-\kpi{cgdp}{$\rho = \nUncRho$}{ensemble spread does not predict error: seeds are not a confidence interval}\\[8pt]
+\kpi{cgdp}{$\rho = \nUncRho$}{spread across training seeds does not predict error: seeds are not a confidence interval}\\[8pt]
 \fnote{Error regression with region-clustered SEs: errors rise with income and built-up share, fall with services share;
-OSM completeness does not matter.}
+OSM completeness does not matter. This is why the application needs its own honest ranges (next).}
 \end{columns}
 \end{frame}
 
-%======================== 12. CAPTION AUDIT ============================
-\begin{frame}{Data checks cut false captions from a third to a quarter}
-\begin{columns}[c,onlytextwidth]
-\column{0.48\textwidth}
-\begin{tikzpicture}[x=0.085cm,y=1cm]
-  \foreach \v/\lo/\hi/\lab/\c [count=\i] in {34.7/29.5/40.2/raw captions/cgdp,23.2/18.7/28.5/after cleaning/okc} {
-    \node[anchor=east,font=\small] at (-2,-\i*1.1) {\lab};
-    \fill[\c] (0,-\i*1.1-0.25) rectangle (\v,-\i*1.1+0.25);
-    \draw[ink,line width=0.8pt] (\lo,-\i*1.1) -- (\hi,-\i*1.1);
-    \draw[ink,line width=0.8pt] (\lo,-\i*1.1-0.1) -- ++(0,0.2); \draw[ink,line width=0.8pt] (\hi,-\i*1.1-0.1) -- ++(0,0.2);
-    \node[anchor=west,font=\bfseries\small] at (\hi+1.5,-\i*1.1) {\v\%};
+%======================== 13. RELIABILITY ===============================
+\setstage{6}
+\begin{frame}{Every estimate ships with an honest range and a warning}
+\begin{columns}[T,onlytextwidth]
+\column{0.4\textwidth}
+\eyebrow{Ranges: promised vs achieved}\\[6pt]
+\begin{tikzpicture}[x=0.032cm,y=1cm]
+  \foreach \p/\a/\lab [count=\i] in {80/79.5/80\% range,90/89.6/90\% range} {
+    \node[anchor=east,font=\footnotesize] at (-2,-\i*1.1+0.18) {\lab};
+    \fill[rule] (0,-\i*1.1+0.08) rectangle (\p,-\i*1.1+0.3);
+    \node[anchor=west,font=\fontsize{6.5}{8}\selectfont,text=muted] at (\p+1.5,-\i*1.1+0.19) {promised \p\%};
+    \fill[cimg] (0,-\i*1.1-0.22) rectangle (\a,-\i*1.1);
+    \node[anchor=west,font=\bfseries\footnotesize,text=cimg] at (\a+1.5,-\i*1.1-0.11) {\a\%};
   }
-  \draw[rule] (0,-0.4) -- (0,-2.8);
-  \node[font=\fontsize{7}{8}\selectfont,text=muted,anchor=north west] at (0,-2.75) {share of captions with $\geq$1 false claim, 95\% CI};
-\end{tikzpicture}\\[10pt]
-\eyebrow{Cleaning}\\[2pt]
-{\small removes \textbf{\nAuditRecall} of false sentences; \textbf{\nAuditPrecision} of what it removes is false or vague}
-\column{0.48\textwidth}
-\eyebrow{Typical false claims}\\[3pt]
-\begin{itemize}\setlength{\itemsep}{3pt}\small
-  \item ``no buildings'' next to a few farmhouses
-  \item ``farmland'' on natural scrub or forest
-  \item ``mining activity'' on centre-pivot fields
-  \item ponds and roads that are not there
-\end{itemize}
-\vspace{6pt}
-\fnote{300 random captions, 1{,}801 sentences labelled correct / false / vague, blind to the cleaning.
-Labelled by an LLM (Claude) looking at each tile, not by people; a human check is still open.
-Noise did not hurt GDP: uncleaned captions (V8) did as well as cleaned (V7).}
+\end{tikzpicture}\\[6pt]
+\fnote{Share of held-out towns whose official value fell inside the range. Ranges are set from past errors on
+validation towns (split conformal), so they need no extra model.}\\[10pt]
+\eyebrow{Example}\\[2pt]
+{\footnotesize \textbf{Catas Altas} (iron mine): estimate R\$\,51k, range 21k--122k, \chip{cgdp}{HIGH RISK}.
+Official: R\$\,391k. The tool cannot see the mine, but it says so.}
+\column{0.56\textwidth}
+\eyebrow{Risk label from satellite signals alone}\\[4pt]
+{\renewcommand{\arraystretch}{1.35}\fontsize{7.5}{9}\selectfont
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Risk & typical error & mining/hydro towns & 90\% range\\
+\midrule
+\dotc{okc}\ Low (299 towns) & $\times$/$\div$\,1.27 & 2 & $\times$/$\div$\,1.61\\
+\dotc{cntl}\ Medium (263) & $\times$/$\div$\,1.34 & 5 & $\times$/$\div$\,1.87\\
+\dotc{cgdp}\ High (291) & $\times$/$\div$\,1.45 & \textbf{\nRiskCatch} & $\times$/$\div$\,2.42\\
+\bottomrule
+\end{tabular}}\\[6pt]
+\fnote{Signals: bare ground (open pits) and a high estimated income. Every group's range still holds about 90\%.
+The warning ranks risk moderately well (AUC \nRiskAuc): it tells you where not to trust a number; it does not fix it.}
 \end{columns}
 \end{frame}
 
-%======================== 13. WHAT TEXT LEARNED ========================
-\begin{frame}{The text space speaks the state's economic geography}
+%======================== 14. TRANSFER: SAO PAULO ======================
+\begin{frame}{Trained in Minas Gerais, it still works in São Paulo}
+\begin{columns}[T,onlytextwidth]
+\column{0.32\textwidth}\centering
+\eyebrow[cgdp]{Official, IBGE 2022}\\[2pt]\includegraphics[width=\linewidth]{sp_official.png}
+\column{0.32\textwidth}\centering
+\eyebrow[cimg]{Predicted, never trained on SP}\\[2pt]\includegraphics[width=\linewidth]{sp_predicted.png}\\[4pt]
+\hspace*{-1.05\linewidth}\includegraphics[width=0.95\linewidth]{cbar_gdp.png}
+\column{0.32\textwidth}
+\eyebrow{R\textsuperscript{2} against official GDP}\\[6pt]
+\begin{tikzpicture}[x=4.4cm,y=0.78cm]
+  \draw[rule] (0,0.1) -- (0,-4.1);
+  \foreach \v/\lab/\c [count=\i] in {0.52/{Satellites, Minas Gerais}/cimg,0.33/{Satellites, São Paulo}/cimg,
+                                     0.27/{Night lights, Minas Gerais}/cntl,-0.06/{Night lights, São Paulo}/cntl} {
+    \node[anchor=south west,font=\fontsize{6.5}{8}\selectfont,inner sep=1pt] at (0,-\i+0.42) {\lab};
+    \fill[\c] (0,-\i+0.4) rectangle (\v,-\i+0.1);
+    \node[anchor=west,font=\bfseries\fontsize{7.5}{9}\selectfont] at ({max(\v,0)+0.02},-\i+0.25) {\v};
+  }
+\end{tikzpicture}\\[4pt]
+\fnote{\nSpMunis{} municipalities, models unchanged. Rank agreement \textbf{\nSpRho} (night lights \nSpNtlRho).
+Minas Gerais 90\% range holds for \nSpRange; risk labels do not transfer.}
+\end{columns}
+\end{frame}
+
+%======================== 15. THE APPLICATION ==========================
+\begin{frame}{The application: GDP estimates where statistics are missing}
+\begin{columns}[T,onlytextwidth]
+\column{0.58\textwidth}
+\framed{rule}{width=\linewidth}{app_guess.png}\\[3pt]
+\fnote{Click a town: estimate, 90\% range and risk label; reveal the official value. Here: the iron-mine town, flagged high risk.}
+\column{0.39\textwidth}
+\eyebrow{What a user can do}\\[3pt]
+\begin{enumerate}\setlength{\itemsep}{3pt}\fontsize{7.5}{9}\selectfont
+  \item \textbf{Estimate any town} from satellite data, with an honest range and a warning when not to trust it.
+  \item \textbf{Compare a new state}: São Paulo predicted vs official, by value or rank, against night lights.
+  \item \textbf{See where satellites are blind}: risk groups and the largest misses, with reasons.
+\end{enumerate}
+\vspace{3pt}
+\framed{rule}{width=0.72\linewidth}{app_transfer.png}\\[1pt]
+\fnote{Works offline: \texttt{app/index.html}. Live demo now.}
+\end{columns}
+\end{frame}
+
+%======================== 16. WHAT DID NOT WORK =======================
+\setstage{7}
+\begin{frame}{What did not work, and what it taught us}
+\centering
+{\renewcommand{\arraystretch}{1.5}\footnotesize
+\begin{tabular}{@{}L{3.3cm}L{5.4cm}L{5.1cm}@{}}
+\eyebrow{We tried} & \eyebrow{What happened} & \eyebrow[cntl]{Lesson}\\[-3pt]
+\ing{cntl}{Night-light steering} & No gain once the aggregator was calibrated; an early ``steering helps'' result vanished & Calibration cut error \nCalibGain: fix the basics before adding ingredients\\
+\ing{ctxt}{Text alignment} & Small gain, shrank in the rerun (\nRerunTextFrozen{} $\to$ \nRerunTextNew) & Frozen embeddings limit what text can add\\
+\ing{cpoi}{POIs and roads} & Nothing on top of text & The fact sentences already carry them\\
+\ing{cgdp}{Stage C vectors as an ``economic space''} & Similar-town search matches size, not wealth (R\textsuperscript{2} \nTwinPc); clusters explain \nClusterPc & The vectors work only inside the model; use estimates, not distances\\
+\ing{muted}{Risk labels in a new state} & \nSpHighRisk{} São Paulo towns flagged high & Ranges travel; warnings need local recalibration\\
+\end{tabular}}\par\vspace{6pt}
+\fnote{All checks out-of-sample; details in the report and reports/tables (rerun\_check, stage\_c\_twins, clusters).}
+\end{frame}
+
+%======================== 17. ANSWERS AND LIMITS ======================
+\begin{frame}{Answers to the five questions, and what we could not do}
+\begin{columns}[T,onlytextwidth]
+\column{0.53\textwidth}
+\eyebrow{Research questions}\\[4pt]
+{\renewcommand{\arraystretch}{1.32}\small
+\begin{tabular}{@{}L{3.0cm}L{3.9cm}@{}}
+RQ1 \ night-light steering & \chip{muted}{NO CLEAR EFFECT}\\
+RQ2 \ text (captions) & \chip{ctxt}{SMALL GAIN, NOT ROBUST}\\
+RQ3 \ POIs and roads & \chip{muted}{NOTHING ADDED}\\
+RQ4 \ hybrid & \chip{cntl}{BEST, NOT SIGNIFICANT}\\
+RQ5 \ where it fails & \chip{cgdp}{MINES, STEEL, COMMUTER TOWNS}\\
+\textit{Beyond}: a new state & \chip{okc}{SATELLITES TRAVEL, LIGHTS DO NOT}\\
+\end{tabular}}\\[6pt]
+\fnote{Every answer out-of-sample on regions never seen; 95\% block-bootstrap intervals; confirmed by a full rerun.}
+\column{0.43\textwidth}
+\eyebrow{Limits}\\[3pt]
+\begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
+  \item GSED is frozen: text can reorganise, not add, image information.
+  \item Caption audit labelled by an LLM, one labeller, no agreement score yet.
+  \item Stage C was revised after the first test results (choices made on validation).
+  \item Trained on one state, transferred to one more; other countries and years untested.
+  \item The tool cannot see mines or industry; it warns instead.
+\end{itemize}
+\end{columns}
+\end{frame}
+
+%======================== 18. CLOSING (night) ==========================
+{\setbeamertemplate{background}{\nightbg}
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=east,inner sep=0,opacity=0.55] at ($(current page.east)+(0.3,0)$)
+    {\includegraphics[height=0.9\paperheight]{hero_ntl.png}};
+\end{tikzpicture}
+\begin{minipage}{0.66\textwidth}\raggedright
+\eyebrow[glow]{Take-away}\\[6pt]
+{\blackfont\fontsize{15}{19}\selectfont\color{white}Free satellite data explain half of local income differences, keep working in a new state, and say when they cannot be trusted.\par}
+\vspace{10pt}
+\begin{tikzpicture}[k/.style={anchor=north west,text width=2.3cm,align=left,inner sep=0}]
+  \node[k] at (0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{glow}\nHybridR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2} in Minas Gerais, unseen regions}};
+  \node[k] at (2.5,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nNtlR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2}, night lights alone}};
+  \node[k] at (5.0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nSpR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2} in São Paulo (night lights \nSpNtlR)}};
+  \node[k] at (7.5,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nCovNinety}\\{\fontsize{7}{8.5}\selectfont\color{haze}of 90\% ranges held}};
+\end{tikzpicture}
+\vspace{10pt}
+
+{\footnotesize\color{haze}Steering, POIs and roads add nothing clear; text adds little.
+\textbf{\color{white}Satellites miss what they cannot see:} mines, steel mills and commuter towns, and the tool warns about them.}\\[12pt]
+{\blackfont\fontsize{16}{18}\selectfont\color{white}Questions?}\\[3pt]
+{\fontsize{7.5}{9}\selectfont\color{haze}github.com/chadsaras/GIS\_Project \ $\cdot$ \ live demo: app/index.html}
+\end{minipage}
+\end{frame}}
+
+%======================== B1. TEXT SPACE ===============================
+\setstage{-1}
+\begin{frame}{Backup: the text space speaks the state's economic geography}
 \begin{columns}[c,onlytextwidth]
 \column{0.4\textwidth}
 \centering\includegraphics[height=5.6cm]{word_contrast.png}
@@ -469,8 +613,77 @@ Noise did not hurt GDP: uncleaned captions (V8) did as well as cleaned (V7).}
 \end{columns}
 \end{frame}
 
-%======================== 14. LESSONS ==================================
-\begin{frame}{Calibration mattered more than night-light steering}
+%======================== B2. RERUN ====================================
+\begin{frame}{Backup: a full rerun from scratch gives the same answers}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+{\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Model & R\textsuperscript{2} frozen & R\textsuperscript{2} rerun & $\Delta$RMSE\\
+\midrule
+V1 night lights & 0.271 & 0.271 & 0.000\\
+V3 embeddings + C & 0.459 & 0.469 & $-$0.004\\
+V4 + steering & 0.441 & 0.489 & $-$0.020\\
+V6 + text + steering & 0.501 & 0.509 & $-$0.004\\
+V7 full model & 0.502 & 0.519 & $-$0.007\\
+\textbf{V10 hybrid} & \textbf{0.523} & \textbf{0.522} & 0.000\\
+V12 LightGBM & 0.386 & 0.386 & 0.000\\
+\bottomrule
+\end{tabular}}
+\column{0.48\textwidth}
+{\renewcommand{\arraystretch}{1.3}\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Question & frozen & rerun\\
+\midrule
+RQ1 steering & +0.007 & $-$0.008\\
+RQ2 text & $-$0.025 & $-$0.009\\
+RQ3 POI, roads & $-$0.001 & $-$0.004\\
+RQ4 hybrid & $-$0.009 & $-$0.002\\
+\bottomrule
+\end{tabular}}\\[6pt]
+\fnote{$\Delta$RMSE of each comparison; every 95\% interval includes 0 in both runs, so every verdict is unchanged.
+Deterministic steps match exactly; neural models differ by up to 0.02 RMSE (multi-threaded CPU training).}
+\end{columns}
+\end{frame}
+
+%======================== B3. STAGE C VECTORS ==========================
+\begin{frame}{Backup: Stage C vectors carry economy size, not wealth}
+\begin{columns}[T,onlytextwidth]
+\column{0.5\textwidth}
+\eyebrow{Twins: 10 most similar training towns}\\[4pt]
+{\renewcommand{\arraystretch}{1.25}\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Space & R\textsuperscript{2} income/person & R\textsuperscript{2} population\\
+\midrule
+Raw satellite vectors & 0.31 & 0.06\\
+Population only & 0.00 & 0.99\\
+Stage C, as trained & 0.22--0.33 & 0.74--0.81\\
+Stage C, size removed & 0.28--0.41 & 0.19--0.47\\
+\textit{The model itself} & \textit{0.46--0.52} & \\
+\bottomrule
+\end{tabular}}
+\column{0.46\textwidth}
+\eyebrow{Clusters: k-means, held-out towns}\\[4pt]
+{\renewcommand{\arraystretch}{1.25}\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+Grouping by & R\textsuperscript{2} income/person\\
+\midrule
+Stage C vectors & 0.05--0.14\\
+Land cover + lights & 0.17--0.23\\
+Raw satellite vectors & 0.23--0.29\\
+\bottomrule
+\end{tabular}}\\[6pt]
+\fnote{Stage C predicts total GDP and subtracts population at the end, so its vectors encode size. They are also
+unstable across trained models (adjusted Rand 0.45 across rounds vs 0.90 for raw vectors).}
+\end{columns}
+\end{frame}
+
+%======================== B4. CALIBRATION ==============================
+\begin{frame}{Backup: calibration mattered more than night-light steering}
 \begin{columns}[c,onlytextwidth]
 \column{0.46\textwidth}
 \centering\resizebox{\linewidth}{!}{\input{../midterm/assets/chart_calibration.tex}}
@@ -479,63 +692,9 @@ Noise did not hurt GDP: uncleaned captions (V8) did as well as cleaned (V7).}
   \item \textbf{Predictions were over-spread.} A straight-line correction fitted on validation municipalities
         cut error by {\bfseries\color{okc}\nCalibGain}.
   \item \textbf{Honest testing changes conclusions.} Steering looked helpful before the fix; after it, the gain vanished.
-  \item \textbf{Captions need checking.} The model invents mines, roads and farmland on plain tiles;
-        simple data checks remove four in ten false sentences.
+  \item \textbf{Disclosed:} the fix was chosen on validation data, but after the first test results were seen.
 \end{enumerate}
 \end{columns}
 \end{frame}
-
-%======================== 15. ANSWERS AND LIMITS ======================
-\setstage{7}
-\begin{frame}{Answers to the five questions, and what we could not do}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
-\eyebrow{Research questions}\\[4pt]
-{\renewcommand{\arraystretch}{1.32}\small
-\begin{tabular}{@{}L{3.1cm}L{3.6cm}@{}}
-RQ1 \ night-light steering & \chip{muted}{NO CLEAR EFFECT}\\
-RQ2 \ text (captions) & \chip{ctxt}{LARGEST GAIN, BORDERLINE}\\
-RQ3 \ POIs and roads & \chip{muted}{NOTHING ADDED}\\
-RQ4 \ hybrid & \chip{cntl}{BEST, NOT SIGNIFICANT}\\
-RQ5 \ where it fails & \chip{cgdp}{MINES, STEEL, COMMUTER TOWNS}\\
-\end{tabular}}\\[8pt]
-\fnote{Every answer out-of-sample on regions never seen; 95\% block-bootstrap intervals.}
-\column{0.44\textwidth}
-\eyebrow{Limits}\\[3pt]
-\begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
-  \item GSED is frozen: text can reorganise, not add, image information.
-  \item Caption audit labelled by an LLM, one labeller, no agreement score yet.
-  \item Stage C was revised after the first test results (choices made on validation).
-  \item Growth over 2018--2021 not tested: Earth Engine quota ran out.
-  \item One state only; transfer elsewhere untested.
-\end{itemize}
-\end{columns}
-\end{frame}
-
-%======================== 12. CLOSING (night) ==========================
-{\setbeamertemplate{background}{\nightbg}
-\begin{frame}[plain]
-\begin{tikzpicture}[remember picture,overlay]
-  \node[anchor=east,inner sep=0,opacity=0.55] at ($(current page.east)+(0.3,0)$)
-    {\includegraphics[height=0.9\paperheight]{hero_ntl.png}};
-\end{tikzpicture}
-\begin{minipage}{0.64\textwidth}\raggedright
-\eyebrow[glow]{Take-away}\\[8pt]
-{\blackfont\fontsize{17}{21}\selectfont\color{white}Satellite embeddings, captions and night lights, tested honestly, explain half of local GDP.\par}
-\vspace{14pt}
-\begin{tikzpicture}[k/.style={anchor=north west,text width=2.3cm,align=left,inner sep=0}]
-  \node[k] at (0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{glow}\nHybridR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2}, hybrid, unseen regions}};
-  \node[k] at (2.5,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nNtlR}\\{\fontsize{7}{8.5}\selectfont\color{haze}R\textsuperscript{2}, night lights alone}};
-  \node[k] at (5.0,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nCalibGain}\\{\fontsize{7}{8.5}\selectfont\color{haze}error after calibration}};
-  \node[k] at (7.5,0) {{\blackfont\fontsize{22}{24}\selectfont\color{white}\nAuditClean}\\{\fontsize{7}{8.5}\selectfont\color{haze}captions with a false claim after checks (\nAuditRaw{} raw)}};
-\end{tikzpicture}
-\vspace{14pt}
-
-{\footnotesize\color{haze}Captions give the largest gain; steering, POIs and roads add nothing clear.
-\textbf{\color{white}Satellites miss what they cannot see:} mines, steel mills and commuter towns.}\\[16pt]
-{\blackfont\fontsize{16}{18}\selectfont\color{white}Questions?}\\[3pt]
-{\fontsize{7.5}{9}\selectfont\color{haze}github.com/chadsaras/GIS\_Project}
-\end{minipage}
-\end{frame}}
 
 \end{document}
