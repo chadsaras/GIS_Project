@@ -66,6 +66,14 @@ Footer route line: Problem · Approach · Test · Results · Failures · Applica
 | coverage chart, R² bars, before/after | 3, 13, 14 | drawn in TikZ in `slides.tex` |
 | numbers | all | `assets/numbers_final.tex` (from reports/tables) |
 
+## Research-only version (`slides_research.tex`)
+
+The same deck without the application (ranges, risk warning, website), for when the application is not presented.
+16 main slides + the same 4 backups: slides 13 (ranges and warning) and 15 (the application) are removed; slide 3
+lists the Stage C finding instead of uncertainty and application; slide 13 is the São Paulo transfer (route line:
+Transfer instead of Application); "what did not work" lists seed spread instead of risk labels; the closing slide
+shows 75% within a factor 1.5 instead of range coverage. `slides.tex` (with the application) is kept unchanged.
+
 ## Timing (about 15 minutes)
 
 Slides 1–3: 1:30 · 4–8: 4:00 · 9–12: 3:30 · 13–15 incl. a 1-minute live demo: 3:30 · 16–18: 2:30.
