@@ -310,11 +310,26 @@ steered embedding. Stage C: per-cell network, log-sum pooling, 5-seed ensemble. 
 \eyebrow[cgdp]{Open at the mid-term}\\[2pt]
 {\footnotesize Is the result \textbf{reproducible}? How good are the \textbf{captions}? \textbf{Where and why} does it fail?
 What did each part \textbf{learn}? Does it work \textbf{elsewhere}?}\\[4pt]
-\fnote{Lesson already then: a calibration fix (\nCalibGain{} error) mattered more than steering (backup B2).}
+\fnote{These results already include the calibration fix (next slide).}
 \end{columns}
 \end{frame}
 
-%======================== 7. SINCE THE MID-TERM ========================
+%======================== 7. RECAP: CALIBRATION ========================
+\begin{frame}{Recap: calibration mattered more than night-light steering}
+\begin{columns}[c,onlytextwidth]
+\column{0.46\textwidth}
+\centering\resizebox{\linewidth}{!}{\input{../midterm/assets/chart_calibration.tex}}
+\column{0.5\textwidth}
+\begin{enumerate}\setlength{\itemsep}{9pt}\small
+  \item \textbf{Predictions were over-spread.} A straight-line correction fitted on validation municipalities
+        cut error by {\bfseries\color{okc}\nCalibGain}.
+  \item \textbf{Honest testing changes conclusions.} Steering looked helpful before the fix; after it, the gain vanished.
+  \item \textbf{Disclosed:} the fix was chosen on validation data, but after the first test results were seen.
+\end{enumerate}
+\end{columns}
+\end{frame}
+
+%======================== 8. SINCE THE MID-TERM ========================
 \setphase{0}
 \begin{frame}{Since the mid-term: seven questions, seven pieces of work}
 \centering
@@ -437,7 +452,7 @@ the tiles show forest and pasture. Reasons are candidates from sector shares.}
 \kpi{ink}{\nSlopeV{} \ {\fontsize{12}{14}\selectfont\color{muted}vs} \ \nSlopeNtl}{extra error per log point of income, hybrid vs night lights}\\[8pt]
 \kpi{ink}{\nMoranV{} \ {\fontsize{12}{14}\selectfont\color{muted}vs} \ \nMoranNtl}{Moran's I of errors: still clustered in space, half as much}\\[8pt]
 \kpi{cgdp}{$\rho = \nUncRho$}{spread across the 5 training seeds does not predict the error}\\[8pt]
-\fnote{Error regression with region-clustered SEs (backup B3): errors rise with income and built-up share, fall with
+\fnote{Error regression with region-clustered SEs (backup B2): errors rise with income and built-up share, fall with
 services share; OSM completeness does not matter.}
 \end{columns}
 \end{frame}
@@ -618,22 +633,7 @@ RQ5 \ where it fails & \chip{cgdp}{MINES, STEEL, COMMUTER TOWNS}\\
 \end{tikzpicture}
 \end{frame}
 
-%======================== B2. CALIBRATION ==============================
-\begin{frame}{Backup: calibration mattered more than night-light steering}
-\begin{columns}[c,onlytextwidth]
-\column{0.46\textwidth}
-\centering\resizebox{\linewidth}{!}{\input{../midterm/assets/chart_calibration.tex}}
-\column{0.5\textwidth}
-\begin{enumerate}\setlength{\itemsep}{9pt}\small
-  \item \textbf{Predictions were over-spread.} A straight-line correction fitted on validation municipalities
-        cut error by {\bfseries\color{okc}\nCalibGain}.
-  \item \textbf{Honest testing changes conclusions.} Steering looked helpful before the fix; after it, the gain vanished.
-  \item \textbf{Disclosed:} the fix was chosen on validation data, but after the first test results were seen.
-\end{enumerate}
-\end{columns}
-\end{frame}
-
-%======================== B3. ERROR REGRESSION =========================
+%======================== B2. ERROR REGRESSION =========================
 \setphase{2}
 \begin{frame}{Backup: what predicts a large error?}
 \centering
