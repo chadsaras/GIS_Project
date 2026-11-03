@@ -333,48 +333,8 @@ What did each part \textbf{learn}? Does it work \textbf{elsewhere}?}\\[4pt]
 \fnote{Also since the mid-term: a 12-page report, results frozen (tag v1.0-results), a one-command rerun script and a data release.}
 \end{frame}
 
-%======================== 8. RERUN =====================================
+%======================== 8. CAPTION AUDIT =============================
 \setstage{3}\setphase{2}
-\begin{frame}{A full rerun from scratch gives the same answers}
-\begin{columns}[T,onlytextwidth]
-\column{0.5\textwidth}
-\eyebrow{Results: frozen vs rerun}\\[4pt]
-{\renewcommand{\arraystretch}{1.2}\footnotesize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Model & R\textsuperscript{2} frozen & R\textsuperscript{2} rerun & $\Delta$RMSE\\
-\midrule
-V1 night lights & 0.271 & 0.271 & 0.000\\
-V3 embeddings + C & 0.459 & 0.469 & $-$0.004\\
-V4 + steering & 0.441 & 0.489 & $-$0.020\\
-V6 + text + steering & 0.501 & 0.509 & $-$0.004\\
-V7 full model & 0.502 & 0.519 & $-$0.007\\
-\textbf{V10 hybrid} & \textbf{0.523} & \textbf{0.522} & 0.000\\
-V12 LightGBM & 0.386 & 0.386 & 0.000\\
-\bottomrule
-\end{tabular}}\\[6pt]
-\fnote{How: \texttt{run\_all.sh} on a fresh clone and an empty data folder, every step from the raw downloads (about 3 days).
-Only the Earth Engine rasters, caption tiles and captions were reused.}
-\column{0.46\textwidth}
-\eyebrow{Research questions: $\Delta$RMSE}\\[4pt]
-{\renewcommand{\arraystretch}{1.3}\footnotesize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Question & frozen & rerun & verdict\\
-\midrule
-RQ1 steering & +0.007 & $-$0.008 & same\\
-RQ2 text & \textbf{$-$0.025} & \textbf{$-$0.009} & same\\
-RQ3 POI, roads & $-$0.001 & $-$0.004 & same\\
-RQ4 hybrid & $-$0.009 & $-$0.002 & same\\
-\bottomrule
-\end{tabular}}\\[6pt]
-{\footnotesize \textbf{Best model unchanged (R\textsuperscript{2} 0.52).} Every interval includes 0 in both runs.\\[3pt]
-\textbf{The text gain is not robust}: it shrinks from \nRerunTextFrozen{} to \nRerunTextNew.}\\[4pt]
-\fnote{Deterministic steps match exactly; neural models differ by up to 0.02 RMSE (multi-threaded CPU training).}
-\end{columns}
-\end{frame}
-
-%======================== 9. CAPTION AUDIT =============================
 \begin{frame}{Blind audit: a third of AI captions hold a false claim}
 \begin{columns}[T,onlytextwidth]
 \column{0.3\textwidth}
